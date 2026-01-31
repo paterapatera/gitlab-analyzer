@@ -7,11 +7,9 @@ Steering files are **project memory**, not exhaustive specifications.
 ## Content Granularity
 
 ### Golden Rule
-
 > "If new code follows existing patterns, steering shouldn't need updating."
 
 ### ✅ Document
-
 - Organizational patterns (feature-first, layered)
 - Naming conventions (PascalCase rules)
 - Import strategies (absolute vs relative)
@@ -19,7 +17,6 @@ Steering files are **project memory**, not exhaustive specifications.
 - Technology standards (key frameworks)
 
 ### ❌ Avoid
-
 - Complete file listings
 - Every component description
 - All dependencies
@@ -30,21 +27,17 @@ Steering files are **project memory**, not exhaustive specifications.
 ### Example Comparison
 
 **Bad** (Specification-like):
-
 ```markdown
 - /components/Button.tsx - Primary button with variants
 - /components/Input.tsx - Text input with validation
 - /components/Modal.tsx - Modal dialog
-  ... (50+ files)
+... (50+ files)
 ```
 
 **Good** (Project Memory):
-
 ```markdown
 ## UI Components (`/components/ui/`)
-
 Reusable, design-system aligned primitives
-
 - Named by function (Button, Input, Modal)
 - Export component + TypeScript interface
 - No business logic
@@ -55,7 +48,6 @@ Reusable, design-system aligned primitives
 ## Security
 
 Never include:
-
 - API keys, passwords, credentials
 - Database URLs, internal IPs
 - Secrets or sensitive data
@@ -77,23 +69,6 @@ Never include:
 - Additive by default (add, don't replace)
 - Add `updated_at` timestamp
 - Note why changes were made
-
----
-
-## Technology Standards
-
-### Key Frameworks
-
-- Frontend: React + TypeScript + Vite
-- Backend: Rust + Tauri
-- Build: Vite for frontend, Cargo for Rust
-
-### Serena MCP Tool Usage Guidelines
-
-- **コード探索**: シンボル検索（`find_symbol`）を優先し、必要最小限のファイル読み込みに留める。`semantic_search` は広範な検索時に使用。
-- **編集**: `replace_symbol_body` や `insert_after_symbol` を使用してシンボル単位の変更を優先。ファイル全体の編集は避ける。
-- **メモリ管理**: `write_memory` でプロジェクト知識を保存し、`read_memory` で再利用。重複読み込みを避ける。
-- **効率化**: 並列ツール呼び出しを活用し、トークン消費を最小限に抑える。
 
 ---
 
