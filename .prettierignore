@@ -1,0 +1,22 @@
+
+# Ignore artifacts and generated files
+build
+dist
+coverage
+public/build
+node_modules
+
+# Rust / Tauri build outputs
+target
+src-tauri/target
+
+# Misc
+.DS_Store
+*.min.js
+*.min.css
+
+# Optional: ignore lockfiles or vendored folders if you don't want them formatted
+# package-lock.json
+# pnpm-lock.yaml
+# yarn.lock
+
