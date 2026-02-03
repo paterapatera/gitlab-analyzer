@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
+build
+coverage
+.env*
 
 # Editor directories and files
 .vscode/*
@@ -18,6 +21,8 @@ dist-ssr
 .github/*
 .idea
 .DS_Store
+Thumbs.db
+*.tmp
 *.suo
 *.ntvs*
 *.njsproj

@@ -1,0 +1,207 @@
+openapi: 3.0.3
+info:
+  title: gitlab-analyzer (Tauri Commands)
+  version: 0.1.0
+  description: |
+    フロントエンド（React）↔ バックエンド（Rust/Tauri command）の契約。
+    HTTP サーバを立てないため、OpenAPI は「論理 API 契約」として用いる。
+
+paths:
+  /gitlab/connection:
+    get:
+      operationId: getGitLabConnection
+      summary: 登録済み GitLab 接続情報を取得
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitLabConnection'
+    put:
+      operationId: setGitLabConnection
+      summary: GitLab 接続情報を登録/更新
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GitLabConnectionInput'
+      responses:
+        '204':
+          description: Updated
+
+  /gitlab/projects:sync:
+    post:
+      operationId: syncProjects
+      summary: GitLab からプロジェクト一覧を同期
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+
+  /gitlab/projects/{projectId}/branches:
+    get:
+      operationId: listBranches
+      summary: ブランチ一覧を取得
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Branch'
+
+  /gitlab/commits:collect:
+    post:
+      operationId: collectCommits
+      summary: コミットを収集して保存
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectCommitsRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectCommitsResult'
+
+  /stats/monthly/project-view:
+    post:
+      operationId: getMonthlyStatsProjectView
+      summary: プロジェクト別ビューの月次集計
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectViewStatsRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyStatsResponse'
+
+  /stats/monthly/cross-view:
+    post:
+      operationId: getMonthlyStatsCrossView
+      summary: 横断ビューの月次集計
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrossViewStatsRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyStatsResponse'
+
+components:
+  schemas:
+    GitLabConnection:
+      type: object
+      properties:
+        baseUrl: { type: string }
+        updatedAtUtc: { type: string }
+      required: [baseUrl, updatedAtUtc]
+      description: |
+        セキュリティ要件により accessToken は返さない（UI/ログ非表示）。
+
+    GitLabConnectionInput:
+      type: object
+      properties:
+        baseUrl: { type: string }
+        accessToken: { type: string }
+      required: [baseUrl, accessToken]
+
+    Project:
+      type: object
+      properties:
+        projectId: { type: integer }
+        name: { type: string }
+        pathWithNamespace: { type: string }
+        webUrl: { type: string }
+      required: [projectId, name, pathWithNamespace, webUrl]
+
+    Branch:
+      type: object
+      properties:
+        projectId: { type: integer }
+        name: { type: string }
+        isDefault: { type: boolean }
+      required: [projectId, name]
+
+    CollectCommitsRequest:
+      type: object
+      properties:
+        projectId: { type: integer }
+        branchName: { type: string }
+        sinceUtc: { type: string, nullable: true }
+        untilUtc: { type: string, nullable: true }
+      required: [projectId, branchName]
+
+    CollectCommitsResult:
+      type: object
+      properties:
+        insertedCount: { type: integer }
+        skippedDuplicateCount: { type: integer }
+        missingStatsCount: { type: integer }
+      required: [insertedCount, skippedDuplicateCount, missingStatsCount]
+
+    ProjectViewStatsRequest:
+      type: object
+      properties:
+        projectId: { type: integer }
+        branchName: { type: string }
+        year: { type: integer }
+        userKeys: { type: array, items: { type: string } }
+      required: [projectId, branchName, year]
+
+    CrossViewStatsRequest:
+      type: object
+      properties:
+        year: { type: integer }
+        userKeys: { type: array, items: { type: string } }
+      required: [year]
+
+    MonthlyStatsResponse:
+      type: object
+      properties:
+        months: { type: array, items: { type: integer }, description: '1..12' }
+        series:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserMonthlySeries'
+      required: [months, series]
+
+    UserMonthlySeries:
+      type: object
+      properties:
+        userKey: { type: string }
+        displayName: { type: string }
+        totals: { type: array, items: { type: integer } }
+        missingCounts: { type: array, items: { type: integer } }
+      required: [userKey, displayName, totals, missingCounts]

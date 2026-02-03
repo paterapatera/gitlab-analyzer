@@ -1,0 +1,96 @@
+<!--
+Sync Impact Report
+
+- Version change: template → 1.0.0
+- Modified principles: placeholder sections → 5 principles focused on code quality, testing, UX consistency, MCP usage, and extensibility
+- Added sections: Quality Gates / Technical Decision Governance
+- Removed sections: all bracket-token placeholders
+- Templates requiring updates:
+	- ✅ .specify/templates/plan-template.md
+	- ✅ .specify/templates/spec-template.md
+	- ✅ .specify/templates/tasks-template.md
+	- ⚠ .specify/templates/commands/*.md (directory not present in this repo)
+- Deferred items:
+	- TODO(RATIFICATION_DATE): 合意・採択日が不明のため、プロジェクトで決定して差し替える
+-->
+
+# gitlab-analyzer Constitution
+
+## Core Principles
+
+### I. コード品質（可読性・コメント規約・複雑性の制御）
+
+- 変更対象のコードは「5秒で説明できる」ことを目標にする（読み手はジュニアを想定）。
+- 複雑でジュニアエンジニアが理解するのに5秒以上かかる処理には、必ず実装分割する。
+- クラス名、関数名（コンストラクタを除く）、プロパティ名、定数名には日本語で説明コメントを付ける。
+  - 対象: 新規追加/変更したシンボル（TypeScript の `export`、Rust の `pub` を優先）。
+  - 形式: TypeScript は JSDoc 形式、Rust は `///` 形式を推奨する。
+- 実装の意図が分かりにくい、または特殊な実装には `NOTE: {説明}` コメントで意図を明確に記述する。
+- コメント内で「それ」「これ」などの曖昧な代名詞を使わず、具体的な名詞で記述する。
+- 誤解を招く、または複数の解釈が可能なコメントは明確に書き直す。
+- 説明が複雑な関数には、入力例・出力例や簡単な使用例をコメントとして追加する。
+
+### II. テスト基準（変更はテストで守る）
+
+- 新規/変更したロジックには、同一コミット内でテストを追加する。
+  - TypeScript: Vitest を標準とする。
+  - Rust: `cargo test` を標準とする。
+- “テストなし” は例外扱いとし、例外は必ず根拠と代替策（手動検証手順、ロールバック手順）を記録する。
+- バグ修正は再発防止の回帰テストを追加する（最小の再現ケースで良い）。
+- I/O（ネットワーク、ファイル、UI イベント、Tauri コマンド境界）を跨ぐ変更は、境界を固定するテスト
+  （統合テスト or 契約テスト or 適切なモック）を用意する。
+
+### III. UX の一貫性（UI と操作感の統一）
+
+- UI 実装では可能な限り shadcn のコンポーネントを優先し、独自 UI は最後の選択肢とする。
+- 同一の操作/状態（読み込み、空、エラー、成功）に対して表示・文言・操作手順を統一する。
+- アクセシビリティを最低基準として扱う。
+  - キーボード操作（Tab/Enter/Esc）、フォーカス可視化、コントラスト、適切なラベル/説明を満たす。
+- UI の変更は、視覚的一貫性（余白、タイポグラフィ、色、アイコン）を崩さないことを優先する。
+
+### IV. MCP 活用（serena / shadcn を最大限利用）
+
+- 設計・コーディング・リファクタリングでは `serena` MCP を最大限利用する（symbol ベースの探索・参照追跡・局所編集を優先）。
+- HTML/UI 生成（コンポーネント追加や雛形作成）では `shadcn` MCP を最大限利用する。
+- MCP を使わない判断をした場合は、代替手段と理由（例: 生成物が要件に合わない、既存実装との整合が取れない）を残す。
+
+### V. 再利用性・拡張性（設計で将来変更コストを下げる）
+
+- 関数は単一の目的（1つの責務）だけを持つ。
+- 上位目的を達成するための下位目的（取得・設定・更新・削除・変換・前処理・後処理など）は別関数に分割する。
+  - 単純で3行程度の関数は無理に分割しない。
+- 副作用（外部状態の変更など）を避け、可能な限り純粋関数（同じ入力で同じ出力）を優先する。
+- 関数は短く保ち、1つの画面に収まる程度（目安: 10-20行以内）にする。
+- 条件分岐（if-else, switch）をポリモーフィズム/ストラテジー/トレイトで置き換え、拡張ポイントを提供する。
+- 既存コードを変更せずに新機能を追加できる設計（Open/Closed）を優先し、必要に応じてファクトリー等で分離する。
+
+## Quality Gates
+
+- ビルド/型チェック/テストが通ることをマージ要件とする。
+  - TypeScript: `npm test`（または `vitest`）が通る
+  - Rust: `cargo test` が通る
+- 変更スコープに応じて、レビューで以下を確認する。
+  - 原則 I のコメント規約（`NOTE:` / 日本語説明コメント）
+  - 原則 II のテスト追加（例外は根拠付き）
+  - 原則 III の UX 一貫性（状態表現、操作性、a11y）
+  - 原則 IV の MCP 活用方針
+
+## Technical Decision Governance
+
+- 技術的な意思決定（設計/依存追加/パターン選択）は、本憲章の原則を満たす案を優先する。
+- 原則に抵触する判断が必要な場合は、代替案・リスク・回避策・将来の返済計画を文書化する。
+  - 記録先は feature の plan.md の "Complexity Tracking" を第一候補とする。
+- 例外は最小化し、必ず期限または解除条件（例: 次のリファクタで分割、次の minor でテスト追加）を定義する。
+
+## Governance
+
+- 本憲章は、仕様・計画・タスク・コードレビューに優先する。
+- すべての PR/レビューは本憲章への準拠を確認し、逸脱がある場合は「例外記録」が必須。
+- 憲章の改定はセマンティックバージョニングに従う。
+  - MAJOR: 原則の削除/後方互換性のない再定義
+  - MINOR: 新原則/新セクション追加、運用上の要求の実質的追加
+  - PATCH: 文言明確化、誤字修正、非実質的な補足
+- 改定手順:
+  - 変更提案 → 影響範囲（テンプレ/運用/既存コード）記載 → 合意 → `.specify/memory/constitution.md` 更新
+
+**Version**: 1.0.0 | **Ratified**: TODO(RATIFICATION_DATE) | **Last Amended**: 2026-02-03
