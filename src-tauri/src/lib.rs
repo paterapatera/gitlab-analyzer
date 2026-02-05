@@ -15,6 +15,7 @@ use commands::{
     get_gitlab_connection, set_gitlab_connection, get_projects, sync_projects,
     list_branches, collect_commits,
     get_monthly_stats_project_view, get_monthly_stats_cross_view,
+    user_filter_get, user_filter_set,
 };
 
 /// Tauri アプリケーションのエントリーポイント
@@ -37,6 +38,9 @@ pub fn run() {
             // US3: 月次集計
             get_monthly_stats_project_view,
             get_monthly_stats_cross_view,
+            // ユーザーフィルタ
+            user_filter_get,
+            user_filter_set,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

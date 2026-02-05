@@ -1,0 +1,119 @@
+openapi: 3.0.0
+info:
+  title: User Filter State - Tauri Commands
+  version: 1.0.0
+  description: |
+    ユーザーフィルタリング選択状態の取得・保存を行うTauriコマンドのAPI契約。
+    プロジェクト別ビューと横断ビューで独立した選択状態を管理する。
+
+paths:
+  /user_filter_get:
+    post:
+      summary: ユーザーフィルタ選択状態を取得
+      description: |
+        指定されたビュー種別とコンテキストキーに対応する選択状態を取得する。
+        保存済みデータが存在しない場合は空配列を返す（フロントエンドで全選択として扱う）。
+      operationId: user_filter_get
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - viewType
+                - contextKey
+              properties:
+                viewType:
+                  type: string
+                  enum: [project-view, cross-view]
+                  description: ビュー種別
+                  example: project-view
+                contextKey:
+                  type: string
+                  description: |
+                    コンテキストキー
+                    - プロジェクト別: "<project>/<branch>/<year>" (例: "my-project/main/2025")
+                    - 横断: "<year>" (例: "2025")
+                  example: my-project/main/2025
+      responses:
+        '200':
+          description: 選択状態の取得成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                description: 選択されたユーザーID配列（authorEmail優先、フォールバックauthorName）
+                example: ['user1@example.com', 'user2@example.com']
+        '500':
+          description: 内部エラー（ファイル読み込み失敗など）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /user_filter_set:
+    post:
+      summary: ユーザーフィルタ選択状態を保存
+      description: |
+        指定されたビュー種別とコンテキストキーに対応する選択状態を保存する。
+        同一のビュー種別+コンテキストキーが存在する場合は上書きする。
+      operationId: user_filter_set
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - viewType
+                - contextKey
+                - selectedUsers
+              properties:
+                viewType:
+                  type: string
+                  enum: [project-view, cross-view]
+                  description: ビュー種別
+                  example: project-view
+                contextKey:
+                  type: string
+                  description: |
+                    コンテキストキー
+                    - プロジェクト別: "<project>/<branch>/<year>" (例: "my-project/main/2025")
+                    - 横断: "<year>" (例: "2025")
+                  example: my-project/main/2025
+                selectedUsers:
+                  type: array
+                  items:
+                    type: string
+                  description: |
+                    選択されたユーザーID配列（authorEmail優先、フォールバックauthorName）
+                    空配列は「全解除」状態を表す
+                  example: ['user1@example.com', 'user2@example.com']
+      responses:
+        '200':
+          description: 保存成功（レスポンスなし）
+        '500':
+          description: 内部エラー（ファイル書き込み失敗など）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: エラーメッセージ
+          example: Failed to read user filter state file
+
+tags:
+  - name: User Filter
+    description: ユーザーフィルタリング選択状態管理

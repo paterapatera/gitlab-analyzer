@@ -5,7 +5,7 @@
  * タブで画面を切り替え、接続設定/プロジェクト/収集/集計の各機能を提供する。
  */
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { invokeCommand } from '@/lib/tauri'
 import type {
   Project,
@@ -14,6 +14,7 @@ import type {
   MonthlyStatsResponse,
   ProjectViewStatsRequest,
   CrossViewStatsRequest,
+  UserFilterViewType,
 } from '@/lib/contracts/tauriCommands'
 import { ConnectionForm } from '@/features/gitlabConnection/ConnectionForm'
 import { ProjectsPanel } from '@/features/projects/ProjectsPanel'
@@ -23,6 +24,8 @@ import { StatsFilters } from '@/features/stats/StatsFilters'
 import { MonthlyBarChart } from '@/features/stats/MonthlyBarChart'
 import { MonthlyTable } from '@/features/stats/MonthlyTable'
 import { MissingStatsNotice } from '@/features/stats/MissingStatsNotice'
+import { UserFilter } from '@/features/stats/UserFilter'
+import { useUserFilter } from '@/features/stats/useUserFilter'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -54,6 +57,47 @@ function App() {
   const [statsYear, setStatsYear] = useState(new Date().getFullYear())
   const [statsData, setStatsData] = useState<MonthlyStatsResponse | null>(null)
   const [isLoadingStats, setIsLoadingStats] = useState(false)
+
+  // ユーザーフィルタ用のcontextKey生成
+  const userFilterViewType: UserFilterViewType =
+    statsView === 'project' ? 'project-view' : 'cross-view'
+  const userFilterContextKey = useMemo(() => {
+    if (statsView === 'project' && selectedProject && selectedBranch) {
+      return `${selectedProject.name}/${selectedBranch}/${statsYear}`
+    }
+    return `${statsYear}`
+  }, [statsView, selectedProject, selectedBranch, statsYear])
+
+  // 利用可能なユーザー（集計データから抽出）
+  const availableUsers = useMemo(() => {
+    if (!statsData) return []
+    return statsData.series.map((s) => ({
+      userKey: s.userKey,
+      displayName: s.displayName,
+    }))
+  }, [statsData])
+
+  // ユーザーフィルタhook
+  const {
+    selectedUsers,
+    isLoading: isLoadingUserFilter,
+    selectAll,
+    deselectAll,
+    setSelectedUsers,
+  } = useUserFilter({
+    viewType: userFilterViewType,
+    contextKey: userFilterContextKey,
+    availableUsers,
+  })
+
+  // フィルタ済み集計データ
+  const filteredStatsData = useMemo<MonthlyStatsResponse | null>(() => {
+    if (!statsData) return null
+    return {
+      months: statsData.months,
+      series: statsData.series.filter((s) => selectedUsers.includes(s.userKey)),
+    }
+  }, [statsData, selectedUsers])
 
   // 初回起動時に保存済みプロジェクト一覧を読み込む
   useEffect(() => {
@@ -293,28 +337,45 @@ function App() {
               {/* 欠損通知 */}
               {statsData && <MissingStatsNotice data={statsData} />}
 
-              {/* グラフ */}
+              {/* ユーザーフィルタ + グラフ + 表 */}
               {statsData && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>月次コミット行数</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <MonthlyBarChart data={statsData} />
-                  </CardContent>
-                </Card>
-              )}
+                <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+                  {/* ユーザーフィルタ */}
+                  <Card>
+                    <CardContent className="pt-6">
+                      <UserFilter
+                        availableUsers={availableUsers}
+                        selectedUsers={selectedUsers}
+                        onSelectionChange={setSelectedUsers}
+                        onSelectAll={selectAll}
+                        onDeselectAll={deselectAll}
+                        isLoading={isLoadingUserFilter}
+                      />
+                    </CardContent>
+                  </Card>
 
-              {/* 表 */}
-              {statsData && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>詳細データ</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <MonthlyTable data={statsData} />
-                  </CardContent>
-                </Card>
+                  <div className="space-y-6">
+                    {/* グラフ */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>月次コミット行数</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <MonthlyBarChart data={filteredStatsData!} />
+                      </CardContent>
+                    </Card>
+
+                    {/* 表 */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>詳細データ</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <MonthlyTable data={filteredStatsData!} />
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
               )}
             </div>
           </TabsContent>

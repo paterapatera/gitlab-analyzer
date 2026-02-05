@@ -10,6 +10,7 @@ pub mod model;
 pub mod connection_repository;
 pub mod project_repository;
 pub mod commit_repository;
+pub mod user_filter_repository;
 
 pub use schema::*;
 pub use json_store::*;
@@ -18,3 +19,4 @@ pub use model::*;
 pub use connection_repository::*;
 pub use project_repository::*;
 pub use commit_repository::*;
+pub use user_filter_repository::*;

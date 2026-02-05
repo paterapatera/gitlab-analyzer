@@ -17,6 +17,10 @@ pub mod commits_collect;
 pub mod stats_monthly_project_view;
 pub mod stats_monthly_cross_view;
 
+// ユーザーフィルタ
+pub mod user_filter_get;
+pub mod user_filter_set;
+
 // Re-export for convenience
 pub use gitlab_connection_get::*;
 pub use gitlab_connection_set::*;
@@ -26,3 +30,5 @@ pub use branches_list::*;
 pub use commits_collect::*;
 pub use stats_monthly_project_view::*;
 pub use stats_monthly_cross_view::*;
+pub use user_filter_get::*;
+pub use user_filter_set::*;

@@ -145,3 +145,70 @@ export interface UserMonthlySeries {
   /** 月別欠損コミット件数（months 配列に対応） */
   missingCounts: number[]
 }
+
+// =============================================================================
+// ユーザーフィルタ選択状態
+// =============================================================================
+
+/**
+ * ユーザーフィルタ選択状態のビュー種別
+ */
+export type UserFilterViewType = 'project-view' | 'cross-view'
+
+/**
+ * ユーザーフィルタ選択状態のコンテキストキー
+ * - プロジェクト別: "<project>/<branch>/<year>"
+ * - 横断: "<year>"
+ */
+export type UserFilterContextKey = string
+
+/**
+ * 選択されたユーザーID配列（authorEmail優先、フォールバックauthorName）
+ */
+export type SelectedUsers = string[]
+
+// =============================================================================
+// Tauri Command Functions
+// =============================================================================
+
+import { invokeCommandOrThrow } from '@/lib/tauri'
+
+/**
+ * ユーザーフィルタ選択状態を取得
+ *
+ * @param viewType - ビュー種別（"project-view" or "cross-view"）
+ * @param contextKey - コンテキストキー
+ * @returns 選択されたユーザーID配列（存在しない場合は空配列）
+ *
+ * NOTE: 空配列は「未保存（全選択として扱う）」を意味する
+ */
+export async function getUserFilterState(
+  viewType: UserFilterViewType,
+  contextKey: UserFilterContextKey,
+): Promise<SelectedUsers> {
+  return invokeCommandOrThrow<SelectedUsers>('user_filter_get', {
+    viewType,
+    contextKey,
+  })
+}
+
+/**
+ * ユーザーフィルタ選択状態を保存
+ *
+ * @param viewType - ビュー種別（"project-view" or "cross-view"）
+ * @param contextKey - コンテキストキー
+ * @param selectedUsers - 選択されたユーザーID配列
+ *
+ * NOTE: 同一のview_type+context_keyが存在する場合は上書き
+ */
+export async function setUserFilterState(
+  viewType: UserFilterViewType,
+  contextKey: UserFilterContextKey,
+  selectedUsers: SelectedUsers,
+): Promise<void> {
+  return invokeCommandOrThrow<void>('user_filter_set', {
+    viewType,
+    contextKey,
+    selectedUsers,
+  })
+}
