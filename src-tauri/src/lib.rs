@@ -26,6 +26,11 @@ pub fn run() {
     
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .setup(|_app| {
+            // SQLite データベース初期化
+            initialize_sqlite()?;
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             // US1: 接続設定
             get_gitlab_connection,
@@ -44,4 +49,14 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+/// SQLite データベース初期化
+/// 
+/// アプリケーション起動時にデータベース接続を確立し、
+/// マイグレーションを実行します。
+fn initialize_sqlite() -> Result<(), Box<dyn std::error::Error>> {
+    let conn = storage::sqlite::DatabaseConnection::create_connection()?;
+    storage::sqlite::run_migrations(&conn)?;
+    tracing::info!("SQLite database initialized successfully");
+    Ok(())
 }
