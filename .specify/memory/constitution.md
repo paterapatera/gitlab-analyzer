@@ -1,17 +1,16 @@
 <!--
 Sync Impact Report
 
-- Version change: template → 1.0.0
-- Modified principles: placeholder sections → 5 principles focused on code quality, testing, UX consistency, MCP usage, and extensibility
-- Added sections: Quality Gates / Technical Decision Governance
-- Removed sections: all bracket-token placeholders
+- Version change: 1.0.0 → 1.1.0
+- Modified principles: none
+- Added sections: Principle VI (Security and Privacy)
+- Removed sections: none
 - Templates requiring updates:
-	- ✅ .specify/templates/plan-template.md
-	- ✅ .specify/templates/spec-template.md
-	- ✅ .specify/templates/tasks-template.md
+	- ✅ .specify/templates/plan-template.md (added security gate to Constitution Check)
+	- ✅ .specify/templates/spec-template.md (no changes needed - security captured in Requirements)
+	- ✅ .specify/templates/tasks-template.md (no changes needed - security tasks per feature)
 	- ⚠ .specify/templates/commands/*.md (directory not present in this repo)
-- Deferred items:
-	- TODO(RATIFICATION_DATE): 合意・採択日が不明のため、プロジェクトで決定して差し替える
+- Deferred items: none
 -->
 
 # gitlab-analyzer Constitution
@@ -64,6 +63,15 @@ Sync Impact Report
 - 条件分岐（if-else, switch）をポリモーフィズム/ストラテジー/トレイトで置き換え、拡張ポイントを提供する。
 - 既存コードを変更せずに新機能を追加できる設計（Open/Closed）を優先し、必要に応じてファクトリー等で分離する。
 
+### VI. セキュリティとプライバシー（機密情報の保護）
+
+- 機密情報（`accessToken`、`authorEmail` など）は UI 表示・コンソールログ・デバッグ出力に**絶対に**出力しない。
+- 機密データは暗号化またはセキュアストレージに保存し、平文でのファイル保存を避ける。
+- エラーメッセージやログには、機密情報を含めない（代わりに ID や一部マスク表示を使用）。
+- 認証情報の検証は必ずバックエンド（Tauri コマンド側）で実行し、フロントエンド側での検証のみに依存しない。
+- ユーザー入力は常にサニタイズし、インジェクション攻撃（SQL、コマンド、XSS など）を防ぐ。
+- セキュリティ要件違反が必要な場合は、リスク評価と代替策を文書化し、レビュー承認を必須とする。
+
 ## Quality Gates
 
 - ビルド/型チェック/テストが通ることをマージ要件とする。
@@ -74,6 +82,7 @@ Sync Impact Report
   - 原則 II のテスト追加（例外は根拠付き）
   - 原則 III の UX 一貫性（状態表現、操作性、a11y）
   - 原則 IV の MCP 活用方針
+  - 原則 VI のセキュリティ要件（機密情報の非表示、入力サニタイズ）
 
 ## Technical Decision Governance
 
@@ -93,4 +102,4 @@ Sync Impact Report
 - 改定手順:
   - 変更提案 → 影響範囲（テンプレ/運用/既存コード）記載 → 合意 → `.specify/memory/constitution.md` 更新
 
-**Version**: 1.0.0 | **Ratified**: TODO(RATIFICATION_DATE) | **Last Amended**: 2026-02-03
+**Version**: 1.1.0 | **Ratified**: 2026-02-03 | **Last Amended**: 2026-02-06
