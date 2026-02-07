@@ -111,7 +111,6 @@ export function ProjectAutocomplete({
             <CommandInput
               value={query}
               onValueChange={handleValueChange}
-              onChange={(event) => handleValueChange(event.target.value)}
               placeholder={placeholder}
               className="pr-10"
               onFocus={() => setOpen(true)}
