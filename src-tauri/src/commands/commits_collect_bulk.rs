@@ -81,14 +81,6 @@ pub fn cancel_bulk_collection() -> Result<(), String> {
     Ok(())
 }
 
-pub(crate) fn is_cancel_requested() -> bool {
-    CANCEL_FLAG.load(Ordering::SeqCst)
-}
-
-pub(crate) fn reset_cancel_flag() {
-    CANCEL_FLAG.store(false, Ordering::SeqCst);
-}
-
 /// 一括収集の状態を取得
 #[tauri::command]
 #[allow(non_snake_case)]

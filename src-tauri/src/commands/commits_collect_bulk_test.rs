@@ -2,10 +2,7 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::commands::commits_collect_bulk::{
-        cancel_bulk_collection, is_cancel_requested, prepare_bulk_collection_start_with_connection,
-        reset_cancel_flag,
-    };
+    use crate::commands::commits_collect_bulk::prepare_bulk_collection_start_with_connection;
     use crate::storage::bulk_collection_repository::{
         cancel_run_with_connection, record_target_result_with_connection,
         register_targets_with_connection, start_run_with_connection,
@@ -23,7 +20,23 @@ mod tests {
         conn
     }
 
+    fn seed_projects(conn: &Connection) {
+        conn.execute(
+            "INSERT INTO projects (project_id, name, path_with_namespace, web_url, last_sync_time_utc)
+             VALUES (1, 'project-a', 'group/project-a', 'https://gitlab.example.com/group/project-a', '2026-02-01T00:00:00Z')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO projects (project_id, name, path_with_namespace, web_url, last_sync_time_utc)
+             VALUES (2, 'project-b', 'group/project-b', 'https://gitlab.example.com/group/project-b', '2026-02-01T00:00:00Z')",
+            [],
+        )
+        .unwrap();
+    }
+
     fn seed_commits(conn: &Connection) {
+        seed_projects(conn);
         conn.execute(
             "INSERT INTO commits (project_id, branch_name, sha, author_name, author_email, committed_date_utc, additions, deletions)
              VALUES (1, 'main', 'a1', 'user', 'user@example.com', '2026-02-01T00:00:00Z', 1, 1)",
@@ -67,14 +80,5 @@ mod tests {
         assert_eq!(context.total_targets, 2);
         assert_eq!(context.completed_count, 1);
         assert_eq!(context.targets.len(), 1);
-    }
-
-    #[test]
-    fn test_cancel_flag_set() {
-        reset_cancel_flag();
-        assert!(!is_cancel_requested());
-
-        cancel_bulk_collection().unwrap();
-        assert!(is_cancel_requested());
     }
 }
