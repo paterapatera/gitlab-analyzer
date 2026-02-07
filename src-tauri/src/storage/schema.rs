@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 
 /// 現在のスキーマバージョン
-pub const CURRENT_SCHEMA_VERSION: u32 = 1;
+pub const CURRENT_SCHEMA_VERSION: u32 = 6;
 
 /// スキーマバージョン情報
 #[derive(Debug, Clone, Serialize, Deserialize)]

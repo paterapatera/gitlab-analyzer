@@ -43,7 +43,9 @@ pub async fn collect_commits(request: CollectCommitsRequest) -> Result<CollectCo
         .map_err(|e| e.user_message())
 }
 
-async fn collect_commits_inner(request: CollectCommitsRequest) -> AppResult<CollectCommitsResult> {
+pub(crate) async fn collect_commits_inner(
+    request: CollectCommitsRequest,
+) -> AppResult<CollectCommitsResult> {
     // 接続設定を取得
     let connection = ConnectionRepository::get()?
         .ok_or(AppError::ConnectionNotConfigured)?;

@@ -95,6 +95,57 @@ export interface CollectCommitsResult {
 }
 
 // =============================================================================
+// 一括コミット収集
+// =============================================================================
+
+/** 一括収集開始レスポンス */
+export interface BulkCollectionStarted {
+  runId: string
+  totalTargets: number
+}
+
+/** 一括収集の対象結果 */
+export interface BulkCollectionTargetResult {
+  projectId: number
+  branchName: string
+  status: 'pending' | 'success' | 'failed'
+  newCommitsCount?: number | null
+  errorMessage?: string | null
+  processedAt?: string | null
+}
+
+/** 一括収集の状態 */
+export interface BulkCollectionStatus {
+  runId: string
+  status: 'running' | 'completed' | 'cancelled'
+  totalTargets: number
+  completedCount: number
+  successCount: number
+  failedCount: number
+  startedAt: string
+  completedAt?: string | null
+  results?: BulkCollectionTargetResult[]
+}
+
+/** 一括収集進捗イベント */
+export interface BulkCollectionProgress {
+  runId: string
+  totalTargets: number
+  completedCount: number
+  successCount: number
+  failedCount: number
+  currentTarget?: {
+    projectId: number
+    branchName: string
+  } | null
+}
+
+/** 失敗対象の再試行リクエスト */
+export interface RetryFailedRequest {
+  runId: string
+}
+
+// =============================================================================
 // 月次集計
 // =============================================================================
 

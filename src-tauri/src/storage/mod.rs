@@ -3,6 +3,7 @@
 //! アプリデータの永続化を担当する。
 //! SQLite ベースのストレージを提供します。
 
+pub mod bulk_collection_repository;
 pub mod json_store;
 pub mod model;
 pub mod repository;
@@ -15,6 +16,10 @@ pub mod connection_repository;
 pub mod project_repository;
 pub mod user_filter_repository;
 
+#[cfg(test)]
+mod bulk_collection_repository_test;
+
+pub use bulk_collection_repository::*;
 pub use commit_repository::*;
 pub use connection_repository::*;
 pub use json_store::*;

@@ -59,6 +59,23 @@ impl CommitRepository {
         Ok(commits)
     }
 
+    /// 指定ブランチの最終コミット時刻を取得
+    pub fn get_last_commit_time(project_id: i64, branch_name: &str) -> AppResult<Option<String>> {
+        let conn = sqlite::DatabaseConnection::create_connection()
+            .map_err(|e| AppError::Storage(e.to_string()))?;
+
+        let result = conn.query_row(
+            "SELECT MAX(committed_date_utc) FROM commits WHERE project_id = ?1 AND branch_name = ?2",
+            rusqlite::params![project_id, branch_name],
+            |row| row.get::<_, Option<String>>(0),
+        );
+
+        match result {
+            Ok(value) => Ok(value),
+            Err(e) => Err(AppError::Storage(e.to_string())),
+        }
+    }
+
     /// 年でフィルタしたコミットを取得（全プロジェクト横断）
     pub fn find_by_year(year: i32) -> AppResult<Vec<Commit>> {
         let conn = sqlite::DatabaseConnection::create_connection()

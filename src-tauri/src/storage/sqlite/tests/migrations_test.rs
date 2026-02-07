@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::storage::sqlite::{DatabaseConnection, run_migrations};
+    use crate::storage::sqlite::{run_migrations, DatabaseConnection};
     use rusqlite::Connection;
     use tempfile::tempdir;
 
@@ -45,11 +45,9 @@ mod tests {
 
         // schema_migrations テーブルにバージョンが記録されていることを確認
         let version_count: i32 = conn
-            .query_row(
-                "SELECT COUNT(*) FROM schema_migrations",
-                [],
-                |row| row.get(0),
-            )
+            .query_row("SELECT COUNT(*) FROM schema_migrations", [], |row| {
+                row.get(0)
+            })
             .unwrap();
 
         assert!(version_count > 0);
@@ -62,7 +60,14 @@ mod tests {
         run_migrations(&conn).unwrap();
 
         // 必要なテーブル一覧
-        let required_tables = vec!["connections", "projects", "commits", "user_filters"];
+        let required_tables = vec![
+            "connections",
+            "projects",
+            "commits",
+            "user_filters",
+            "bulk_collection_runs",
+            "bulk_collection_results",
+        ];
 
         for table_name in required_tables {
             let exists: bool = conn
@@ -88,9 +93,7 @@ mod tests {
 
         // commits テーブルの複合主キーを確認
         let table_info: Vec<(String, String, i32)> = {
-            let mut stmt = conn
-                .prepare("PRAGMA table_info(commits)")
-                .unwrap();
+            let mut stmt = conn.prepare("PRAGMA table_info(commits)").unwrap();
 
             stmt.query_map([], |row| {
                 Ok((
@@ -106,7 +109,9 @@ mod tests {
 
         // project_id, branch_name, sha が主キーの一部であることを確認
         assert!(
-            table_info.iter().any(|(name, _, pk)| name == "project_id" && *pk > 0),
+            table_info
+                .iter()
+                .any(|(name, _, pk)| name == "project_id" && *pk > 0),
             "project_id should be part of primary key"
         );
     }

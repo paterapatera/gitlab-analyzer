@@ -13,7 +13,8 @@ pub mod commands;
 
 use commands::{
     get_gitlab_connection, set_gitlab_connection, get_projects, sync_projects,
-    list_branches, collect_commits,
+    list_branches, collect_commits, collect_commits_bulk, cancel_bulk_collection,
+    get_bulk_collection_status, retry_failed_targets,
     get_monthly_stats_project_view, get_monthly_stats_cross_view,
     user_filter_get, user_filter_set,
 };
@@ -40,6 +41,10 @@ pub fn run() {
             // US2: コミット収集
             list_branches,
             collect_commits,
+            collect_commits_bulk,
+            cancel_bulk_collection,
+            get_bulk_collection_status,
+            retry_failed_targets,
             // US3: 月次集計
             get_monthly_stats_project_view,
             get_monthly_stats_cross_view,

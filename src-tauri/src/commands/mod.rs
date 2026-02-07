@@ -12,6 +12,7 @@ pub mod projects_sync;
 // US2: コミット収集
 pub mod branches_list;
 pub mod commits_collect;
+pub mod commits_collect_bulk;
 
 // US3: 月次集計
 pub mod stats_monthly_project_view;
@@ -21,6 +22,9 @@ pub mod stats_monthly_cross_view;
 pub mod user_filter_get;
 pub mod user_filter_set;
 
+#[cfg(test)]
+mod commits_collect_bulk_test;
+
 // Re-export for convenience
 pub use gitlab_connection_get::*;
 pub use gitlab_connection_set::*;
@@ -28,6 +32,7 @@ pub use projects_list::*;
 pub use projects_sync::*;
 pub use branches_list::*;
 pub use commits_collect::*;
+pub use commits_collect_bulk::*;
 pub use stats_monthly_project_view::*;
 pub use stats_monthly_cross_view::*;
 pub use user_filter_get::*;

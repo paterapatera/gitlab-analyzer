@@ -11,14 +11,20 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
     create_schema_migrations_table(conn)?;
 
     // 既に適用されたマイグレーション版を取得
-    let applied_versions = get_applied_versions(conn)?;
+    let mut applied_versions = get_applied_versions(conn)?;
     if !applied_versions.contains(&1) {
         apply_baseline_schema(conn)?;
         record_migration(conn, 1)?;
+        applied_versions.push(1);
     }
 
     ensure_access_token_column(conn)?;
     ensure_indexes(conn)?;
+
+    if !applied_versions.contains(&6) {
+        apply_bulk_collection_schema(conn)?;
+        record_migration(conn, 6)?;
+    }
 
     tracing::info!("Migrations completed successfully");
     Ok(())
@@ -108,6 +114,12 @@ fn ensure_indexes(conn: &Connection) -> Result<()> {
         apply_baseline_schema(conn)?;
     }
 
+    Ok(())
+}
+
+fn apply_bulk_collection_schema(conn: &Connection) -> Result<()> {
+    conn.execute_batch(include_str!("migrations/006_bulk_collection.sql"))
+        .context("Failed to execute bulk collection schema")?;
     Ok(())
 }
 

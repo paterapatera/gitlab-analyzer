@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: gitlab-analyzer - Bulk Commit Collection (Tauri Commands)
+  version: 0.1.0
+  description: |
+    一括コミット収集機能の Tauri コマンド契約。
+    フロントエンド（React）↔ バックエンド（Rust/Tauri command）の API 定義。
+
+paths:
+  /gitlab/commits:collect-bulk:
+    post:
+      operationId: collectCommitsBulk
+      summary: 収集履歴がある全対象の続きを一括収集
+      description: |
+        - 収集履歴がある全ての (project_id, branch_name) ペアを対象とする
+        - 各対象を順次処理し、前回の収集点（最後の committed_date_utc）以降のコミットを収集
+        - 処理済み結果は逐次 SQLite に保存され、中断時も進捗が保持される
+        - 進捗は `bulk-collection-progress` イベントで通知される
+      responses:
+        '200':
+          description: 一括収集が開始され、run_id が返される
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkCollectionStarted'
+        '400':
+          description: Bad Request（既に実行中、または対象が0件）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /gitlab/commits:collect-bulk-cancel:
+    post:
+      operationId: cancelBulkCollection
+      summary: 実行中の一括収集をキャンセル
+      description: |
+        - 現在実行中の一括収集をキャンセルする
+        - 処理済みの結果は保持され、未処理の対象は pending 状態のまま
+        - キャンセル後、status は 'cancelled' に更新される
+      responses:
+        '204':
+          description: キャンセル要求が受理された
+        '404':
+          description: 実行中の一括収集が見つからない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /gitlab/commits:collect-bulk-status:
+    get:
+      operationId: getBulkCollectionStatus
+      summary: 一括収集の状態を取得
+      parameters:
+        - in: query
+          name: runId
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: 一括収集の実行ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkCollectionStatus'
+        '404':
+          description: 指定された run_id が見つからない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /gitlab/commits:collect-bulk-retry-failed:
+    post:
+      operationId: retryFailedTargets
+      summary: 失敗した対象のみを再試行
+      description: |
+        - 指定された run_id で失敗した対象のみを再収集
+        - 新しい run_id が生成され、失敗対象が pending 状態で登録される
+        - 成功済みの対象は再実行されない
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetryFailedRequest'
+      responses:
+        '200':
+          description: 再試行が開始され、新しい run_id が返される
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkCollectionStarted'
+        '400':
+          description: Bad Request（失敗対象が0件）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    BulkCollectionStarted:
+      type: object
+      required:
+        - runId
+        - totalTargets
+      properties:
+        runId:
+          type: string
+          format: uuid
+          description: 一括収集の実行ID
+          example: '550e8400-e29b-41d4-a716-446655440000'
+        totalTargets:
+          type: integer
+          description: 処理対象の総数
+          example: 42
+
+    BulkCollectionStatus:
+      type: object
+      required:
+        - runId
+        - status
+        - totalTargets
+        - completedCount
+        - successCount
+        - failedCount
+        - startedAt
+      properties:
+        runId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [running, completed, cancelled]
+          description: 実行状態
+        totalTargets:
+          type: integer
+          description: 処理対象の総数
+        completedCount:
+          type: integer
+          description: 処理済み（成功+失敗）の数
+        successCount:
+          type: integer
+          description: 成功した対象の数
+        failedCount:
+          type: integer
+          description: 失敗した対象の数
+        startedAt:
+          type: string
+          format: date-time
+          description: 開始時刻（ISO-8601 UTC）
+          example: '2026-02-06T12:34:56Z'
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: 完了時刻（ISO-8601 UTC、実行中の場合は null）
+          example: '2026-02-06T12:44:56Z'
+        results:
+          type: array
+          description: 各対象の処理結果（オプション、詳細取得時のみ）
+          items:
+            $ref: '#/components/schemas/TargetResult'
+
+    TargetResult:
+      type: object
+      required:
+        - projectId
+        - branchName
+        - status
+      properties:
+        projectId:
+          type: integer
+          description: プロジェクトID
+        branchName:
+          type: string
+          description: ブランチ名
+        status:
+          type: string
+          enum: [pending, success, failed]
+          description: 処理状態
+        newCommitsCount:
+          type: integer
+          nullable: true
+          description: 新規追加されたコミット数（成功時のみ）
+        errorMessage:
+          type: string
+          nullable: true
+          description: エラーメッセージ（失敗時のみ）
+        processedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: 処理完了時刻（ISO-8601 UTC）
+
+    RetryFailedRequest:
+      type: object
+      required:
+        - runId
+      properties:
+        runId:
+          type: string
+          format: uuid
+          description: 再試行対象の元の run_id
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: エラーメッセージ
+
+events:
+  bulk-collection-progress:
+    description: |
+      一括収集の進捗イベント。
+      各対象の処理完了後に emit される。
+    payload:
+      type: object
+      required:
+        - runId
+        - totalTargets
+        - completedCount
+        - successCount
+        - failedCount
+        - currentTarget
+      properties:
+        runId:
+          type: string
+          format: uuid
+        totalTargets:
+          type: integer
+        completedCount:
+          type: integer
+        successCount:
+          type: integer
+        failedCount:
+          type: integer
+        currentTarget:
+          type: object
+          nullable: true
+          description: 現在処理中の対象（処理中の場合のみ）
+          properties:
+            projectId:
+              type: integer
+            branchName:
+              type: string

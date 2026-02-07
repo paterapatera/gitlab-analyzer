@@ -8,6 +8,7 @@ import type { Project, CollectCommitsResult } from '@/lib/contracts/tauriCommand
 import { ProjectsPanel } from '@/features/projects/ProjectsPanel'
 import { CollectForm } from '@/features/collect/CollectForm'
 import { CollectResult } from '@/features/collect/CollectResult'
+import { BulkCollectCard } from '@/features/collect/BulkCollectCard'
 import { Card, CardContent } from '@/components/ui/card'
 
 /** コミット収集タブのプロパティ */
@@ -36,6 +37,7 @@ export function CollectTab({
         selectedProjectId={selectedProject?.projectId}
       />
       <div className="space-y-6">
+        <BulkCollectCard />
         {selectedProject ? (
           <CollectContent
             projectId={selectedProject.projectId}

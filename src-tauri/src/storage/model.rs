@@ -45,3 +45,31 @@ impl AppData {
         Self::default()
     }
 }
+
+/// 一括収集の実行状態
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BulkCollectionStatus {
+    pub run_id: String,
+    pub status: String,
+    pub total_targets: i64,
+    pub completed_count: i64,
+    pub success_count: i64,
+    pub failed_count: i64,
+    pub started_at: String,
+    pub completed_at: Option<String>,
+    #[serde(default)]
+    pub results: Vec<BulkCollectionTargetResult>,
+}
+
+/// 一括収集の対象ごとの結果
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BulkCollectionTargetResult {
+    pub project_id: i64,
+    pub branch_name: String,
+    pub status: String,
+    pub new_commits_count: Option<i64>,
+    pub error_message: Option<String>,
+    pub processed_at: Option<String>,
+}
