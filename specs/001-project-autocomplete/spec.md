@@ -5,6 +5,17 @@
 **Status**: Draft  
 **Input**: User description: "ユーザーとして、プロジェクトを選択する時、オートコンプリートによる絞り込みがしたい。なぜなら、数十件あるプロジェクトの中から目的のプロジェクトを探すのは困難なため。"
 
+## Clarifications
+
+### Session 2026-02-07
+
+- Q: Should autocomplete filtering be client-side or server-side? → A: Client-side filtering of the already-loaded project list.
+- Q: What matching rule should autocomplete use? → A: Partial match (contains).
+- Q: What debounce delay should be used for input filtering? → A: 150ms.
+- Q: What minimum input length should trigger filtering? → A: 1 character (empty shows all).
+- Q: What maximum number of results should be shown? → A: 100 results with a prompt to refine.
+- Q: How should suggestions be presented? → A: Dropdown (combobox) under the input.
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Basic Project Search (Priority: P1)
@@ -84,6 +95,12 @@
 - **FR-009**: システムは複数の画面（コミット収集画面、集計表示画面のプロジェクト別表示）でのプロジェクト選択で、統一されたオートコンプリート機能を提供しなければならない
 - **FR-010**: システムは各画面でのプロジェクト選択後、関連する機能（ブランチ選択、データ更新など）が正常に動作しなければならない
 - **FR-011**: システムはプロジェクトリストのローディング状態を適切に表示しなければならない
+- **FR-012**: システムは取得済みのプロジェクト一覧をクライアント側で絞り込みしなければならない
+- **FR-013**: システムは部分一致（入力文字列を含む）で候補を絞り込みしなければならない
+- **FR-014**: システムは入力変更から150msのデバウンス後に絞り込みを実行しなければならない
+- **FR-015**: システムは1文字以上の入力で絞り込みを開始し、空欄時は全件を表示しなければならない
+- **FR-016**: システムは候補の表示件数を最大100件に制限し、超過時は絞り込みを促すメッセージを表示しなければならない
+- **FR-017**: システムは入力欄の下にドロップダウン（コンボボックス）で候補を表示しなければならない
 
 ### Key Entities
 

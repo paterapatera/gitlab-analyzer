@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BulkCollectCard } from './BulkCollectCard'
 
@@ -66,15 +66,17 @@ describe('BulkCollectCard', () => {
       expect(progressHandler).not.toBeNull()
     })
 
-    progressHandler?.({
-      payload: {
-        runId: 'run-1',
-        totalTargets: 3,
-        completedCount: 1,
-        successCount: 1,
-        failedCount: 0,
-        currentTarget: { projectId: 1, branchName: 'main' },
-      },
+    act(() => {
+      progressHandler?.({
+        payload: {
+          runId: 'run-1',
+          totalTargets: 3,
+          completedCount: 1,
+          successCount: 1,
+          failedCount: 0,
+          currentTarget: { projectId: 1, branchName: 'main' },
+        },
+      })
     })
 
     await waitFor(() => {

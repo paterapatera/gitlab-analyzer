@@ -7,12 +7,13 @@
 import type { Project } from '@/lib/contracts/tauriCommands'
 import { Label } from '@/components/ui/label'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { ProjectAutocomplete } from '@/features/projects/ProjectAutocomplete'
 
 /** プロジェクト・ブランチ選択のプロパティ */
 export interface ProjectBranchSelectorProps {
   projects: Project[]
   selectedProject: Project | null
-  onProjectChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
+  onProjectSelect: (project: Project) => void
   branches: Array<{ name: string }>
   selectedBranch: string
   onBranchChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
@@ -22,7 +23,7 @@ export interface ProjectBranchSelectorProps {
 export function ProjectBranchSelector({
   projects,
   selectedProject,
-  onProjectChange,
+  onProjectSelect,
   branches,
   selectedBranch,
   onBranchChange,
@@ -31,19 +32,14 @@ export function ProjectBranchSelector({
     <>
       <div className="flex items-center gap-2">
         <Label>プロジェクト:</Label>
-        <NativeSelect
-          value={selectedProject?.projectId.toString() || ''}
-          onChange={onProjectChange}
-          size="sm"
-          className="min-w-[200px]"
-        >
-          <NativeSelectOption value="">選択してください</NativeSelectOption>
-          {projects.map((project) => (
-            <NativeSelectOption key={project.projectId} value={project.projectId.toString()}>
-              {project.name}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+        <div className="min-w-[240px]">
+          <ProjectAutocomplete
+            projects={projects}
+            selectedProjectId={selectedProject?.projectId}
+            onSelect={onProjectSelect}
+            placeholder="プロジェクトを検索"
+          />
+        </div>
       </div>
 
       {selectedProject && (

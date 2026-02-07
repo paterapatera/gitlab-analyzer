@@ -1,0 +1,47 @@
+openapi: 3.0.3
+info:
+  title: gitlab-analyzer (Tauri Commands)
+  version: 0.1.0
+  description: |
+    Project autocomplete uses existing project list commands.
+    This contract documents the logical API boundary for project listing.
+
+paths:
+  /gitlab/projects:
+    get:
+      operationId: getProjects
+      summary: ローカルに保存されたプロジェクト一覧を取得
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+
+  /gitlab/projects:sync:
+    post:
+      operationId: syncProjects
+      summary: GitLab からプロジェクト一覧を同期
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+
+components:
+  schemas:
+    Project:
+      type: object
+      properties:
+        projectId: { type: integer }
+        name: { type: string }
+        pathWithNamespace: { type: string }
+        webUrl: { type: string }
+      required: [projectId, name, pathWithNamespace, webUrl]

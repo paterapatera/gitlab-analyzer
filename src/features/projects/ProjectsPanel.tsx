@@ -8,7 +8,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { invokeCommand } from '@/lib/tauri'
 import type { Project } from '@/lib/contracts/tauriCommands'
 import { ErrorAlert } from '@/features/ui/ErrorAlert'
-import { cn } from '@/lib/utils'
+import { ProjectAutocomplete } from '@/features/projects/ProjectAutocomplete'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardAction } from '@/components/ui/card'
 
@@ -89,32 +89,20 @@ export function ProjectsPanel({
       <CardContent>
         {error && <ErrorAlert message={error} onDismiss={() => setError(null)} />}
 
-        {projects.length === 0 && !error && !isLoadingProjects && (
-          <p className="text-muted-foreground">
-            プロジェクトがありません。「プロジェクト同期」をクリックして取得してください。
-          </p>
-        )}
+        <div className="space-y-3">
+          <ProjectAutocomplete
+            projects={projects}
+            selectedProjectId={selectedProjectId}
+            isLoading={isLoadingProjects}
+            onSelect={(project) => onProjectSelect?.(project)}
+          />
 
-        {projects.length > 0 && (
-          <ul className="divide-y divide-border rounded-md border">
-            {projects.map((project) => (
-              <li key={project.projectId}>
-                <button
-                  type="button"
-                  onClick={() => onProjectSelect?.(project)}
-                  className={cn(
-                    'w-full px-4 py-3 text-left transition-colors',
-                    'hover:bg-accent focus:bg-accent focus:outline-none',
-                    selectedProjectId === project.projectId && 'bg-accent',
-                  )}
-                >
-                  <div className="font-medium">{project.name}</div>
-                  <div className="text-sm">{project.pathWithNamespace}</div>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+          {projects.length === 0 && !error && !isLoadingProjects && (
+            <p className="text-muted-foreground">
+              プロジェクトがありません。「プロジェクト同期」をクリックして取得してください。
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   )

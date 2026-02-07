@@ -88,13 +88,9 @@ export function StatsTab({ projects }: StatsTabProps) {
   }, [loadStats])
 
   // プロジェクト変更ハンドラ
-  const handleProjectChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const project = projects.find((p) => p.projectId.toString() === e.target.value)
-      setSelectedProject(project || null)
-    },
-    [projects],
-  )
+  const handleProjectSelect = useCallback((project: Project) => {
+    setSelectedProject(project)
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -104,7 +100,7 @@ export function StatsTab({ projects }: StatsTabProps) {
         onStatsViewChange={setStatsView}
         projects={projects}
         selectedProject={selectedProject}
-        onProjectChange={handleProjectChange}
+        onProjectSelect={handleProjectSelect}
         branches={branches}
         selectedBranch={selectedBranch}
         onBranchChange={(e) => setSelectedBranch(e.target.value)}

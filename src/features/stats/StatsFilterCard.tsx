@@ -18,7 +18,7 @@ export interface StatsFilterCardProps {
   onStatsViewChange: (view: StatsView) => void
   projects: Project[]
   selectedProject: Project | null
-  onProjectChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
+  onProjectSelect: (project: Project) => void
   branches: Array<{ name: string }>
   selectedBranch: string
   onBranchChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
@@ -34,7 +34,7 @@ export function StatsFilterCard({
   onStatsViewChange,
   projects,
   selectedProject,
-  onProjectChange,
+  onProjectSelect,
   branches,
   selectedBranch,
   onBranchChange,
@@ -55,7 +55,7 @@ export function StatsFilterCard({
             <ProjectBranchSelector
               projects={projects}
               selectedProject={selectedProject}
-              onProjectChange={onProjectChange}
+              onProjectSelect={onProjectSelect}
               branches={branches}
               selectedBranch={selectedBranch}
               onBranchChange={onBranchChange}
