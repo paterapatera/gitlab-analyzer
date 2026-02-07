@@ -236,6 +236,46 @@ impl CommitRepository {
         Ok(count)
     }
 
+    /// ブランチ内のコミット総数を取得
+    pub fn count_commits_by_branch(
+        conn: &Connection,
+        project_id: i32,
+        branch_name: &str,
+    ) -> Result<i32> {
+        let count: i32 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM commits WHERE project_id = ? AND branch_name = ?",
+                rusqlite::params![project_id, branch_name],
+                |row| row.get(0),
+            )
+            .context("Failed to count commits by branch")?;
+
+        Ok(count)
+    }
+
+    /// ブランチ内のコミットを物理削除し、削除件数を返す
+    pub fn delete_commits_by_branch(
+        conn: &Connection,
+        project_id: i32,
+        branch_name: &str,
+    ) -> Result<usize> {
+        let deleted = conn
+            .execute(
+                "DELETE FROM commits WHERE project_id = ? AND branch_name = ?",
+                rusqlite::params![project_id, branch_name],
+            )
+            .context("Failed to delete commits by branch")?;
+
+        tracing::info!(
+            "Deleted {} commits for project_id={}, branch={}",
+            deleted,
+            project_id,
+            branch_name
+        );
+
+        Ok(deleted)
+    }
+
     /// 単一コミットの取得
     pub fn get_commit(
         conn: &Connection,

@@ -2,7 +2,9 @@
 //!
 //! 指定されたビュー種別とコンテキストキーに対応する選択状態を保存する。
 
-use crate::storage::user_filter_repository::{UserFilterRepository, UserFilterViewType, SelectedUsers};
+use crate::storage::user_filter_repository::{
+    SelectedUsers, UserFilterRepository, UserFilterViewType,
+};
 
 /// ユーザーフィルタ選択状態を保存
 ///
@@ -20,7 +22,7 @@ pub async fn user_filter_set(
     selected_users: SelectedUsers,
 ) -> Result<(), String> {
     let view_type = parse_view_type(&view_type)?;
-    
+
     UserFilterRepository::set(&view_type, &context_key, selected_users)
         .map_err(|e| format!("フィルタ状態の保存に失敗しました: {}", e))
 }

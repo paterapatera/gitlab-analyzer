@@ -9,8 +9,10 @@ import type { StatsView } from '@/features/stats/useStatsData'
 import { StatsFilters } from '@/features/stats/StatsFilters'
 import { ViewSelector } from '@/features/stats/ViewSelector'
 import { ProjectBranchSelector } from '@/features/stats/ProjectBranchSelector'
+import { BranchDeleteDialog } from '@/features/stats/BranchDeleteDialog'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import type { DeleteBranchImpactResponse } from '@/lib/contracts/tauriCommands'
 
 /** フィルタカードのプロパティ */
 export interface StatsFilterCardProps {
@@ -26,6 +28,14 @@ export interface StatsFilterCardProps {
   onYearChange: (year: number) => void
   isLoadingStats: boolean
   onRefresh: () => void
+  /** 削除後のコールバック */
+  onBranchDeleted?: () => void
+  /** 影響サマリ（US2） */
+  branchDeleteImpact?: DeleteBranchImpactResponse | null
+  /** 影響サマリ取得中フラグ */
+  isLoadingBranchDeleteImpact?: boolean
+  /** 影響サマリ取得コールバック */
+  onRequestBranchDeleteImpact?: () => void
 }
 
 /** フィルタカードコンポーネント */
@@ -42,6 +52,10 @@ export function StatsFilterCard({
   onYearChange,
   isLoadingStats,
   onRefresh,
+  onBranchDeleted,
+  branchDeleteImpact,
+  isLoadingBranchDeleteImpact,
+  onRequestBranchDeleteImpact,
 }: StatsFilterCardProps) {
   return (
     <Card>
@@ -65,9 +79,23 @@ export function StatsFilterCard({
           <StatsFilters year={statsYear} onYearChange={onYearChange} />
         </div>
 
-        <Button onClick={onRefresh} disabled={isLoadingStats}>
-          {isLoadingStats ? '読み込み中...' : '更新'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* ブランチ削除ボタン（プロジェクトビュー + ブランチ選択済みの場合のみ） */}
+          {statsView === 'project' && selectedProject && selectedBranch && (
+            <BranchDeleteDialog
+              projectId={selectedProject.projectId}
+              branchName={selectedBranch}
+              impact={branchDeleteImpact}
+              isLoadingImpact={isLoadingBranchDeleteImpact}
+              onDeleted={onBranchDeleted}
+              onOpen={onRequestBranchDeleteImpact}
+            />
+          )}
+
+          <Button onClick={onRefresh} disabled={isLoadingStats}>
+            {isLoadingStats ? '読み込み中...' : '更新'}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )

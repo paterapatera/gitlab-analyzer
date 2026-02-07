@@ -99,6 +99,40 @@ pub fn get_failed_targets(run_id: &str) -> AppResult<Vec<(i64, String)>> {
     get_targets_by_status(run_id, "failed")
 }
 
+/// 指定ブランチが現在収集中かどうかを判定
+///
+/// 実行中（running）の一括収集に、同一 project_id + branch_name が
+/// pending 状態で登録されている場合に true を返す。
+pub fn is_branch_collecting(project_id: i64, branch_name: &str) -> AppResult<bool> {
+    let conn = sqlite::DatabaseConnection::create_connection()
+        .map_err(|e| AppError::Storage(e.to_string()))?;
+    is_branch_collecting_with_connection(&conn, project_id, branch_name)
+}
+
+pub(crate) fn is_branch_collecting_with_connection(
+    conn: &rusqlite::Connection,
+    project_id: i64,
+    branch_name: &str,
+) -> AppResult<bool> {
+    let is_collecting: bool = conn
+        .query_row(
+            "SELECT EXISTS(
+                SELECT 1
+                FROM bulk_collection_runs r
+                JOIN bulk_collection_results t ON r.run_id = t.run_id
+                WHERE r.status = 'running'
+                  AND t.project_id = ?1
+                  AND t.branch_name = ?2
+                  AND t.status = 'pending'
+            )",
+            params![project_id, branch_name],
+            |row| row.get(0),
+        )
+        .map_err(|e| AppError::Storage(e.to_string()))?;
+
+    Ok(is_collecting)
+}
+
 fn get_targets_by_status(run_id: &str, status: &str) -> AppResult<Vec<(i64, String)>> {
     let conn = sqlite::DatabaseConnection::create_connection()
         .map_err(|e| AppError::Storage(e.to_string()))?;
@@ -112,7 +146,10 @@ pub fn get_status(run_id: &str, include_results: bool) -> AppResult<BulkCollecti
     get_status_with_connection(&conn, run_id, include_results)
 }
 
-fn get_results(conn: &rusqlite::Connection, run_id: &str) -> AppResult<Vec<BulkCollectionTargetResult>> {
+fn get_results(
+    conn: &rusqlite::Connection,
+    run_id: &str,
+) -> AppResult<Vec<BulkCollectionTargetResult>> {
     let mut stmt = conn
         .prepare(
             "SELECT project_id, branch_name, status, new_commits_count, error_message, processed_at_utc
@@ -207,7 +244,11 @@ pub(crate) fn record_target_result_with_connection(
     )
     .map_err(|e| AppError::Storage(e.to_string()))?;
 
-    let count_field = if success { "success_count" } else { "failed_count" };
+    let count_field = if success {
+        "success_count"
+    } else {
+        "failed_count"
+    };
     conn.execute(
         &format!(
             "UPDATE bulk_collection_runs
@@ -309,7 +350,9 @@ pub(crate) fn get_collection_targets_with_connection(
         .map_err(|e| AppError::Storage(e.to_string()))?;
 
     let targets = stmt
-        .query_map([], |row| Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?)))
+        .query_map([], |row| {
+            Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?))
+        })
         .map_err(|e| AppError::Storage(e.to_string()))?
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| AppError::Storage(e.to_string()))?;

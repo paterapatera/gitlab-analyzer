@@ -37,7 +37,9 @@ pub struct CollectCommitsResult {
 
 /// コミットを収集
 #[tauri::command]
-pub async fn collect_commits(request: CollectCommitsRequest) -> Result<CollectCommitsResult, String> {
+pub async fn collect_commits(
+    request: CollectCommitsRequest,
+) -> Result<CollectCommitsResult, String> {
     collect_commits_inner(request)
         .await
         .map_err(|e| e.user_message())
@@ -47,47 +49,43 @@ pub(crate) async fn collect_commits_inner(
     request: CollectCommitsRequest,
 ) -> AppResult<CollectCommitsResult> {
     // 接続設定を取得
-    let connection = ConnectionRepository::get()?
-        .ok_or(AppError::ConnectionNotConfigured)?;
-    
+    let connection = ConnectionRepository::get()?.ok_or(AppError::ConnectionNotConfigured)?;
+
     info!(
         "コミット収集開始: project_id={}, branch={}, since={:?}, until={:?}",
-        request.project_id,
-        request.branch_name,
-        request.since_utc,
-        request.until_utc
+        request.project_id, request.branch_name, request.since_utc, request.until_utc
     );
-    
+
     // GitLab API からコミット一覧を取得
     let client = GitLabClient::new(&connection.base_url, &connection.access_token)?;
-    let gitlab_commits = client.list_commits(
-        request.project_id,
-        &request.branch_name,
-        request.since_utc.as_deref(),
-        request.until_utc.as_deref(),
-    ).await?;
-    
+    let gitlab_commits = client
+        .list_commits(
+            request.project_id,
+            &request.branch_name,
+            request.since_utc.as_deref(),
+            request.until_utc.as_deref(),
+        )
+        .await?;
+
     info!("取得したコミット数: {}", gitlab_commits.len());
-    
+
     // ドメインモデルに変換
     let commits: Vec<Commit> = gitlab_commits
         .into_iter()
         .map(|c| Commit::from_gitlab(request.project_id, &request.branch_name, c))
         .collect();
-    
+
     // stats 欠損件数をカウント
     let missing_stats_count = commits.iter().filter(|c| c.stats_missing).count();
-    
+
     // 保存（重複スキップ）
     let upsert_result = CommitRepository::bulk_upsert(commits)?;
-    
+
     info!(
         "コミット収集完了: inserted={}, skipped={}, missing_stats={}",
-        upsert_result.inserted,
-        upsert_result.skipped,
-        missing_stats_count
+        upsert_result.inserted, upsert_result.skipped, missing_stats_count
     );
-    
+
     Ok(CollectCommitsResult {
         inserted_count: upsert_result.inserted,
         skipped_duplicate_count: upsert_result.skipped,

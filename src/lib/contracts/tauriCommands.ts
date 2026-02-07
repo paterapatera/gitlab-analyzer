@@ -263,3 +263,96 @@ export async function setUserFilterState(
     selectedUsers,
   })
 }
+
+// =============================================================================
+// ブランチ削除
+// =============================================================================
+
+/** 影響ビュー種別 */
+export type AffectedView = 'project-view' | 'cross-view'
+
+/**
+ * ブランチ削除の影響サマリリクエスト
+ */
+export interface DeleteBranchImpactRequest {
+  /** 対象プロジェクト ID */
+  projectId: number
+  /** 対象ブランチ名 */
+  branchName: string
+}
+
+/**
+ * ブランチ削除の影響サマリレスポンス
+ */
+export interface DeleteBranchImpactResponse {
+  /** プロジェクト ID */
+  projectId: number
+  /** ブランチ名 */
+  branchName: string
+  /** 削除対象コミット数 */
+  commitCount: number
+  /** 影響を受けるビュー */
+  affectedViews: AffectedView[]
+  /** 削除可能かどうか */
+  canDelete: boolean
+  /** ブロック理由（削除不可の場合） */
+  blockReason?: string | null
+  /** ステータス */
+  status: 'ok' | 'no_commits' | 'blocked'
+}
+
+/**
+ * ブランチ削除リクエスト
+ */
+export interface DeleteBranchRequest {
+  /** 対象プロジェクト ID */
+  projectId: number
+  /** 対象ブランチ名 */
+  branchName: string
+}
+
+/**
+ * ブランチ削除レスポンス
+ */
+export interface DeleteBranchResponse {
+  /** プロジェクト ID */
+  projectId: number
+  /** ブランチ名 */
+  branchName: string
+  /** 削除件数 */
+  deletedCount: number
+  /** 影響を受けたビュー */
+  affectedViews: AffectedView[]
+  /** ステータス */
+  status: 'deleted' | 'no_commits'
+  /** メッセージ（省略可能） */
+  message?: string | null
+}
+
+/**
+ * ブランチ削除の影響サマリを取得
+ *
+ * @param request - 影響サマリリクエスト
+ * @returns 影響サマリレスポンス
+ */
+export async function getBranchDeleteImpact(
+  request: DeleteBranchImpactRequest,
+): Promise<DeleteBranchImpactResponse> {
+  return invokeCommandOrThrow<DeleteBranchImpactResponse>('get_branch_delete_impact', {
+    request,
+  })
+}
+
+/**
+ * ブランチ単位でコミットを削除
+ *
+ * @param request - 削除リクエスト
+ * @returns 削除レスポンス
+ */
+export async function deleteBranchCommits(
+  request: DeleteBranchRequest,
+): Promise<DeleteBranchResponse> {
+  return invokeCommandOrThrow<DeleteBranchResponse>('delete_branch_commits', {
+    request,
+  })
+}

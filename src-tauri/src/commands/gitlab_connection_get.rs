@@ -10,8 +10,7 @@ use crate::storage::ConnectionRepository;
 /// 接続設定を取得（トークン非返却）
 #[tauri::command]
 pub fn get_gitlab_connection() -> Result<Option<GitLabConnectionPublic>, String> {
-    get_gitlab_connection_inner()
-        .map_err(|e| e.to_string())
+    get_gitlab_connection_inner().map_err(|e| e.to_string())
 }
 
 fn get_gitlab_connection_inner() -> AppResult<Option<GitLabConnectionPublic>> {

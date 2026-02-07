@@ -16,8 +16,10 @@ mod tests {
         let conn = Connection::open_in_memory().unwrap();
         conn.execute_batch(include_str!("../storage/sqlite/migrations/001_init.sql"))
             .unwrap();
-        conn.execute_batch(include_str!("../storage/sqlite/migrations/006_bulk_collection.sql"))
-            .unwrap();
+        conn.execute_batch(include_str!(
+            "../storage/sqlite/migrations/006_bulk_collection.sql"
+        ))
+        .unwrap();
         conn
     }
 
@@ -56,16 +58,8 @@ mod tests {
         let targets = vec![(1, "main".to_string()), (2, "dev".to_string())];
         register_targets_with_connection(&mut conn, &run_id, &targets).unwrap();
 
-        record_target_result_with_connection(
-            &conn,
-            &run_id,
-            1,
-            "main",
-            true,
-            Some(1),
-            None,
-        )
-        .unwrap();
+        record_target_result_with_connection(&conn, &run_id, 1, "main", true, Some(1), None)
+            .unwrap();
         cancel_run_with_connection(&conn, &run_id).unwrap();
 
         let context = prepare_bulk_collection_start_with_connection(&mut conn).unwrap();

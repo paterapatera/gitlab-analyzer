@@ -2,10 +2,10 @@
 //!
 //! GitLab REST API との通信を担当する。
 
-pub mod client;
-pub mod types;
 pub mod branches;
+pub mod client;
 pub mod commits;
+pub mod types;
 
 pub use client::*;
 pub use types::*;

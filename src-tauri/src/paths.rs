@@ -14,21 +14,22 @@ const APP_DATA_DIR_NAME: &str = "gitlab-analyzer";
 /// macOS: `~/Library/Application Support/gitlab-analyzer`
 /// Linux: `~/.local/share/gitlab-analyzer`
 pub fn get_app_data_dir() -> AppResult<PathBuf> {
-    let base = dirs::data_dir()
-        .ok_or_else(|| AppError::Internal("アプリデータディレクトリを特定できません".to_string()))?;
-    
+    let base = dirs::data_dir().ok_or_else(|| {
+        AppError::Internal("アプリデータディレクトリを特定できません".to_string())
+    })?;
+
     Ok(base.join(APP_DATA_DIR_NAME))
 }
 
 /// アプリデータディレクトリを確保（存在しなければ作成）
 pub fn ensure_app_data_dir() -> AppResult<PathBuf> {
     let dir = get_app_data_dir()?;
-    
+
     if !dir.exists() {
         std::fs::create_dir_all(&dir)
             .map_err(|e| AppError::Storage(format!("ディレクトリ作成失敗: {}", e)))?;
     }
-    
+
     Ok(dir)
 }
 

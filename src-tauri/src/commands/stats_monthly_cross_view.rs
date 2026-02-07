@@ -21,21 +21,24 @@ pub struct CrossViewStatsRequest {
 
 /// 横断ビューの月次集計
 #[tauri::command]
-pub fn get_monthly_stats_cross_view(request: CrossViewStatsRequest) -> Result<MonthlyStatsResponse, String> {
-    get_monthly_stats_cross_view_inner(request)
-        .map_err(|e| e.to_string())
+pub fn get_monthly_stats_cross_view(
+    request: CrossViewStatsRequest,
+) -> Result<MonthlyStatsResponse, String> {
+    get_monthly_stats_cross_view_inner(request).map_err(|e| e.to_string())
 }
 
-fn get_monthly_stats_cross_view_inner(request: CrossViewStatsRequest) -> AppResult<MonthlyStatsResponse> {
+fn get_monthly_stats_cross_view_inner(
+    request: CrossViewStatsRequest,
+) -> AppResult<MonthlyStatsResponse> {
     info!("横断ビュー集計: year={}", request.year);
-    
+
     // 年でフィルタしたコミットを取得
     let commits = CommitRepository::find_by_year(request.year)?;
-    
+
     info!("集計対象コミット数: {}", commits.len());
-    
+
     // 集計
     let response = aggregate_cross_view(&commits, &request.user_keys);
-    
+
     Ok(response)
 }

@@ -2,7 +2,7 @@
 //!
 //! JSON ファイルに保存するデータのルート構造を定義する。
 
-use crate::domain::{GitLabConnection, Project, Commit};
+use crate::domain::{Commit, GitLabConnection, Project};
 use crate::storage::schema::SchemaVersion;
 use serde::{Deserialize, Serialize};
 
@@ -14,15 +14,15 @@ pub const DATA_FILE_NAME: &str = "data.json";
 pub struct AppData {
     /// スキーマバージョン
     pub schema: SchemaVersion,
-    
+
     /// GitLab 接続設定（1件のみ）
     #[serde(default)]
     pub connection: Option<GitLabConnection>,
-    
+
     /// プロジェクト一覧
     #[serde(default)]
     pub projects: Vec<Project>,
-    
+
     /// コミット一覧
     #[serde(default)]
     pub commits: Vec<Commit>,

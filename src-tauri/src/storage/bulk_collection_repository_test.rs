@@ -52,26 +52,10 @@ mod tests {
         let targets = vec![(1, "main".to_string()), (2, "dev".to_string())];
         register_targets_with_connection(&mut conn, &run_id, &targets).unwrap();
 
-        record_target_result_with_connection(
-            &conn,
-            &run_id,
-            1,
-            "main",
-            true,
-            Some(3),
-            None,
-        )
-        .unwrap();
-        record_target_result_with_connection(
-            &conn,
-            &run_id,
-            2,
-            "dev",
-            false,
-            None,
-            Some("failed"),
-        )
-        .unwrap();
+        record_target_result_with_connection(&conn, &run_id, 1, "main", true, Some(3), None)
+            .unwrap();
+        record_target_result_with_connection(&conn, &run_id, 2, "dev", false, None, Some("failed"))
+            .unwrap();
 
         let status = get_status_with_connection(&conn, &run_id, true).unwrap();
         assert_eq!(status.total_targets, 2);
@@ -88,26 +72,10 @@ mod tests {
         let targets = vec![(1, "main".to_string()), (2, "dev".to_string())];
         register_targets_with_connection(&mut conn, &run_id, &targets).unwrap();
 
-        record_target_result_with_connection(
-            &conn,
-            &run_id,
-            1,
-            "main",
-            true,
-            Some(1),
-            None,
-        )
-        .unwrap();
-        record_target_result_with_connection(
-            &conn,
-            &run_id,
-            2,
-            "dev",
-            false,
-            None,
-            Some("error"),
-        )
-        .unwrap();
+        record_target_result_with_connection(&conn, &run_id, 1, "main", true, Some(1), None)
+            .unwrap();
+        record_target_result_with_connection(&conn, &run_id, 2, "dev", false, None, Some("error"))
+            .unwrap();
 
         let failed = get_targets_by_status_with_connection(&conn, &run_id, "failed").unwrap();
         assert_eq!(failed, vec![(2, "dev".to_string())]);

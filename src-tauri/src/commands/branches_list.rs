@@ -19,22 +19,21 @@ pub async fn list_branches(projectId: i64) -> Result<Vec<Branch>, String> {
 
 async fn list_branches_inner(project_id: i64) -> AppResult<Vec<Branch>> {
     // 接続設定を取得
-    let connection = ConnectionRepository::get()?
-        .ok_or(AppError::ConnectionNotConfigured)?;
-    
+    let connection = ConnectionRepository::get()?.ok_or(AppError::ConnectionNotConfigured)?;
+
     info!("ブランチ一覧取得: project_id={}", project_id);
-    
+
     // GitLab API からブランチ一覧を取得
     let client = GitLabClient::new(&connection.base_url, &connection.access_token)?;
     let gitlab_branches = client.list_branches(project_id).await?;
-    
+
     // ドメインモデルに変換
     let branches: Vec<Branch> = gitlab_branches
         .into_iter()
         .map(|b| Branch::from_gitlab(project_id, b))
         .collect();
-    
+
     info!("取得したブランチ数: {}", branches.len());
-    
+
     Ok(branches)
 }

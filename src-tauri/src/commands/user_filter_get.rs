@@ -2,7 +2,9 @@
 //!
 //! 指定されたビュー種別とコンテキストキーに対応する選択状態を取得する。
 
-use crate::storage::user_filter_repository::{UserFilterRepository, UserFilterViewType, SelectedUsers};
+use crate::storage::user_filter_repository::{
+    SelectedUsers, UserFilterRepository, UserFilterViewType,
+};
 
 /// ユーザーフィルタ選択状態を取得
 ///
@@ -21,7 +23,7 @@ pub async fn user_filter_get(
     context_key: String,
 ) -> Result<SelectedUsers, String> {
     let view_type = parse_view_type(&view_type)?;
-    
+
     UserFilterRepository::get(&view_type, &context_key)
         .map_err(|e| format!("フィルタ状態の取得に失敗しました: {}", e))
 }

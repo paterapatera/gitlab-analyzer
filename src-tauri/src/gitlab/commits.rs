@@ -25,18 +25,18 @@ impl GitLabClient {
             project_id,
             urlencoding::encode(branch_name)
         );
-        
+
         if let Some(since) = since {
             path.push_str(&format!("&since={}", urlencoding::encode(since)));
         }
-        
+
         if let Some(until) = until {
             path.push_str(&format!("&until={}", urlencoding::encode(until)));
         }
-        
+
         self.get_all_pages(&path).await
     }
-    
+
     /// アクセス可能なプロジェクト一覧を取得
     pub async fn list_projects(&self) -> AppResult<Vec<crate::gitlab::GitLabProject>> {
         let path = "/projects?membership=true&simple=true";

@@ -1,0 +1,112 @@
+openapi: 3.0.3
+info:
+  title: gitlab-analyzer (Tauri Commands)
+  version: 0.1.0
+  description: |
+    フロントエンド（React）↔ バックエンド（Rust/Tauri command）の契約。
+    HTTP サーバを立てないため、OpenAPI は「論理 API 契約」として用いる。
+
+paths:
+  /commits/branch:delete-impact:
+    post:
+      operationId: getBranchDeleteImpact
+      summary: ブランチ削除の影響サマリを取得
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteBranchImpactRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteBranchImpactResponse'
+
+  /commits/branch:delete:
+    post:
+      operationId: deleteBranchCommits
+      summary: ブランチ単位でコミットを削除
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteBranchRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteBranchResponse'
+        '409':
+          description: Conflict (collection running)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandError'
+
+components:
+  schemas:
+    DeleteBranchImpactRequest:
+      type: object
+      properties:
+        projectId: { type: integer }
+        branchName: { type: string }
+      required: [projectId, branchName]
+
+    DeleteBranchImpactResponse:
+      type: object
+      properties:
+        projectId: { type: integer }
+        branchName: { type: string }
+        commitCount: { type: integer }
+        affectedViews:
+          type: array
+          items:
+            $ref: '#/components/schemas/AffectedView'
+        canDelete: { type: boolean }
+        blockReason: { type: string, nullable: true }
+        status:
+          type: string
+          enum: [ok, no_commits, blocked]
+      required: [projectId, branchName, commitCount, affectedViews, canDelete, status]
+
+    DeleteBranchRequest:
+      type: object
+      properties:
+        projectId: { type: integer }
+        branchName: { type: string }
+      required: [projectId, branchName]
+
+    DeleteBranchResponse:
+      type: object
+      properties:
+        projectId: { type: integer }
+        branchName: { type: string }
+        deletedCount: { type: integer }
+        affectedViews:
+          type: array
+          items:
+            $ref: '#/components/schemas/AffectedView'
+        status:
+          type: string
+          enum: [deleted, no_commits]
+        message: { type: string, nullable: true }
+      required: [projectId, branchName, deletedCount, affectedViews, status]
+
+    AffectedView:
+      type: string
+      enum:
+        - project-view
+        - cross-view
+
+    CommandError:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+      required: [code, message]

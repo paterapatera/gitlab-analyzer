@@ -58,7 +58,7 @@ impl UserStats {
             ..Default::default()
         }
     }
-    
+
     /// UserMonthlySeries に変換
     pub fn to_series(&self, user_key: &str) -> UserMonthlySeries {
         UserMonthlySeries {
@@ -77,12 +77,12 @@ mod tests {
     #[test]
     fn test_user_stats_to_series() {
         let mut stats = UserStats::new("John Doe");
-        stats.monthly_totals[0] = 100;  // 1月
-        stats.monthly_totals[5] = 200;  // 6月
+        stats.monthly_totals[0] = 100; // 1月
+        stats.monthly_totals[5] = 200; // 6月
         stats.monthly_missing[0] = 1;
-        
+
         let series = stats.to_series("john@example.com");
-        
+
         assert_eq!(series.user_key, "john@example.com");
         assert_eq!(series.display_name, "John Doe");
         assert_eq!(series.totals[0], 100);
@@ -99,7 +99,7 @@ mod tests {
             totals: vec![0; 12],
             missing_counts: vec![0; 12],
         };
-        
+
         // display_name には email が含まれない
         assert!(!series.display_name.contains("@"));
     }

@@ -9,8 +9,7 @@ use tracing_subscriber::{fmt, EnvFilter};
 ///
 /// 環境変数 `RUST_LOG` でレベル制御可能。デフォルトは `info`。
 pub fn init_logging() {
-    let filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info"));
+    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
     fmt()
         .with_env_filter(filter)
@@ -44,13 +43,13 @@ pub fn mask_email(email: &str) -> String {
     if let Some(at_pos) = email.find('@') {
         let local = &email[..at_pos];
         let domain = &email[at_pos + 1..];
-        
+
         let masked_local = if local.is_empty() {
             "***".to_string()
         } else {
             format!("{}***", &local[..1.min(local.len())])
         };
-        
+
         let masked_domain = if domain.is_empty() {
             "***".to_string()
         } else if let Some(dot_pos) = domain.rfind('.') {
@@ -64,7 +63,7 @@ pub fn mask_email(email: &str) -> String {
         } else {
             format!("{}***", &domain[..1.min(domain.len())])
         };
-        
+
         format!("{}@{}", masked_local, masked_domain)
     } else {
         mask_sensitive(email)

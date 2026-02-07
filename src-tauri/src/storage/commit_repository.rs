@@ -122,6 +122,37 @@ impl CommitRepository {
         Ok(commits)
     }
 
+    /// 指定ブランチのコミット件数を取得
+    pub fn count_by_branch(project_id: i64, branch_name: &str) -> AppResult<i64> {
+        let conn = sqlite::DatabaseConnection::create_connection()
+            .map_err(|e| AppError::Storage(e.to_string()))?;
+
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM commits WHERE project_id = ?1 AND branch_name = ?2",
+                rusqlite::params![project_id, branch_name],
+                |row| row.get(0),
+            )
+            .map_err(|e| AppError::Storage(e.to_string()))?;
+
+        Ok(count)
+    }
+
+    /// 指定ブランチのコミットを物理削除し、削除件数を返す
+    pub fn delete_by_branch(project_id: i64, branch_name: &str) -> AppResult<i64> {
+        let conn = sqlite::DatabaseConnection::create_connection()
+            .map_err(|e| AppError::Storage(e.to_string()))?;
+
+        let deleted = conn
+            .execute(
+                "DELETE FROM commits WHERE project_id = ?1 AND branch_name = ?2",
+                rusqlite::params![project_id, branch_name],
+            )
+            .map_err(|e| AppError::Storage(e.to_string()))?;
+
+        Ok(deleted as i64)
+    }
+
     /// 一括挿入（重複スキップ）
     pub fn bulk_upsert(new_commits: Vec<Commit>) -> AppResult<BulkUpsertResult> {
         let mut conn = sqlite::DatabaseConnection::create_connection()

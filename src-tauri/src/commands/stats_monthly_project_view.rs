@@ -25,35 +25,34 @@ pub struct ProjectViewStatsRequest {
 
 /// プロジェクトビューの月次集計
 #[tauri::command]
-pub fn get_monthly_stats_project_view(request: ProjectViewStatsRequest) -> Result<MonthlyStatsResponse, String> {
-    get_monthly_stats_project_view_inner(request)
-        .map_err(|e| e.to_string())
+pub fn get_monthly_stats_project_view(
+    request: ProjectViewStatsRequest,
+) -> Result<MonthlyStatsResponse, String> {
+    get_monthly_stats_project_view_inner(request).map_err(|e| e.to_string())
 }
 
-fn get_monthly_stats_project_view_inner(request: ProjectViewStatsRequest) -> AppResult<MonthlyStatsResponse> {
+fn get_monthly_stats_project_view_inner(
+    request: ProjectViewStatsRequest,
+) -> AppResult<MonthlyStatsResponse> {
     info!(
         "プロジェクトビュー集計: project_id={}, branch={}, year={}",
-        request.project_id,
-        request.branch_name,
-        request.year
+        request.project_id, request.branch_name, request.year
     );
-    
+
     // コミットを取得
-    let commits = CommitRepository::find_by_project_and_branch(
-        request.project_id,
-        &request.branch_name,
-    )?;
-    
+    let commits =
+        CommitRepository::find_by_project_and_branch(request.project_id, &request.branch_name)?;
+
     // 年でフィルタ
     let commits: Vec<_> = commits
         .into_iter()
         .filter(|c| c.year() == request.year)
         .collect();
-    
+
     info!("集計対象コミット数: {}", commits.len());
-    
+
     // 集計
     let response = aggregate_project_view(&commits, &request.user_keys);
-    
+
     Ok(response)
 }

@@ -11,40 +11,37 @@ use std::collections::HashMap;
 /// # Arguments
 /// * `commits` - 対象コミット一覧（既にプロジェクト/ブランチ/年でフィルタ済み）
 /// * `user_keys` - フィルタするユーザーキー（空の場合は全ユーザー）
-pub fn aggregate_project_view(
-    commits: &[Commit],
-    user_keys: &[String],
-) -> MonthlyStatsResponse {
+pub fn aggregate_project_view(commits: &[Commit], user_keys: &[String]) -> MonthlyStatsResponse {
     let mut user_stats_map: HashMap<String, UserStats> = HashMap::new();
-    
+
     for commit in commits {
         let user_key = commit.user_key();
-        
+
         // ユーザーフィルタ
         if !user_keys.is_empty() && !user_keys.contains(&user_key) {
             continue;
         }
-        
+
         let month_index = (commit.month() as usize).saturating_sub(1);
         if month_index >= 12 {
             continue;
         }
-        
+
         let stats = user_stats_map
             .entry(user_key.clone())
             .or_insert_with(|| UserStats::new(commit.display_name()));
-        
+
         stats.monthly_totals[month_index] += commit.total_lines();
         if commit.stats_missing {
             stats.monthly_missing[month_index] += 1;
         }
     }
-    
+
     let series: Vec<_> = user_stats_map
         .iter()
         .map(|(key, stats)| stats.to_series(key))
         .collect();
-    
+
     MonthlyStatsResponse {
         months: (1..=12).collect(),
         series,
@@ -56,7 +53,14 @@ mod tests {
     use super::*;
     use chrono::{TimeZone, Utc};
 
-    fn create_commit(month: u32, user: &str, email: Option<&str>, additions: i64, deletions: i64, missing: bool) -> Commit {
+    fn create_commit(
+        month: u32,
+        user: &str,
+        email: Option<&str>,
+        additions: i64,
+        deletions: i64,
+        missing: bool,
+    ) -> Commit {
         Commit {
             project_id: 1,
             branch_name: "main".to_string(),
@@ -78,19 +82,27 @@ mod tests {
             create_commit(1, "Bob", None, 80, 20, false),
             create_commit(2, "Alice", Some("alice@example.com"), 60, 40, false),
         ];
-        
+
         let result = aggregate_project_view(&commits, &[]);
-        
+
         assert_eq!(result.months.len(), 12);
         assert_eq!(result.series.len(), 2);
-        
+
         // Alice の集計
-        let alice = result.series.iter().find(|s| s.display_name == "Alice").unwrap();
+        let alice = result
+            .series
+            .iter()
+            .find(|s| s.display_name == "Alice")
+            .unwrap();
         assert_eq!(alice.totals[0], 150); // 1月: 100+50
         assert_eq!(alice.totals[1], 100); // 2月: 60+40
-        
+
         // Bob の集計
-        let bob = result.series.iter().find(|s| s.display_name == "Bob").unwrap();
+        let bob = result
+            .series
+            .iter()
+            .find(|s| s.display_name == "Bob")
+            .unwrap();
         assert_eq!(bob.totals[0], 100); // 1月: 80+20
     }
 
@@ -100,9 +112,9 @@ mod tests {
             create_commit(1, "Alice", Some("alice@example.com"), 100, 0, false),
             create_commit(1, "Bob", None, 50, 0, false),
         ];
-        
+
         let result = aggregate_project_view(&commits, &["alice@example.com".to_string()]);
-        
+
         // Alice のみ
         assert_eq!(result.series.len(), 1);
         assert_eq!(result.series[0].display_name, "Alice");
@@ -111,13 +123,17 @@ mod tests {
     #[test]
     fn test_aggregate_missing_stats_count() {
         let commits = vec![
-            create_commit(3, "Alice", None, 0, 0, true),  // stats 欠損
+            create_commit(3, "Alice", None, 0, 0, true), // stats 欠損
             create_commit(3, "Alice", None, 100, 0, false),
         ];
-        
+
         let result = aggregate_project_view(&commits, &[]);
-        
-        let alice = result.series.iter().find(|s| s.display_name == "Alice").unwrap();
+
+        let alice = result
+            .series
+            .iter()
+            .find(|s| s.display_name == "Alice")
+            .unwrap();
         assert_eq!(alice.missing_counts[2], 1); // 3月に1件欠損
     }
 
@@ -136,10 +152,14 @@ mod tests {
             deletions: 0,
             stats_missing: false,
         };
-        
+
         let result = aggregate_project_view(&[commit], &[]);
-        
-        let test_user = result.series.iter().find(|s| s.display_name == "Test").unwrap();
+
+        let test_user = result
+            .series
+            .iter()
+            .find(|s| s.display_name == "Test")
+            .unwrap();
         // 6月にカウントされる（インデックス 5）
         assert_eq!(test_user.totals[5], 10);
     }

@@ -15,7 +15,7 @@ pub trait ReadRepository<T> {
 pub trait WriteRepository<T, ID> {
     /// 保存（挿入または更新）
     fn save(&mut self, entity: T) -> AppResult<()>;
-    
+
     /// 削除
     fn delete(&mut self, id: &ID) -> AppResult<()>;
 }

@@ -14,6 +14,7 @@ import { UserFilter } from '@/features/stats/UserFilter'
 import { useUserFilter } from '@/features/stats/useUserFilter'
 import { useBranches } from '@/features/stats/useBranches'
 import { useStatsData, type StatsView } from '@/features/stats/useStatsData'
+import { useBranchDeleteImpact } from '@/features/stats/useBranchDeleteImpact'
 import { StatsFilterCard } from '@/features/stats/StatsFilterCard'
 import { SelectionAlerts } from '@/features/stats/SelectionAlerts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -92,6 +93,28 @@ export function StatsTab({ projects }: StatsTabProps) {
     setSelectedProject(project)
   }, [])
 
+  // ブランチ削除影響サマリ
+  const {
+    impact: branchDeleteImpact,
+    isLoading: isLoadingBranchDeleteImpact,
+    fetchImpact: fetchBranchDeleteImpact,
+  } = useBranchDeleteImpact()
+
+  /** 影響サマリ取得をリクエスト */
+  const handleRequestBranchDeleteImpact = useCallback(() => {
+    if (selectedProject && selectedBranch) {
+      fetchBranchDeleteImpact({
+        projectId: selectedProject.projectId,
+        branchName: selectedBranch,
+      })
+    }
+  }, [selectedProject, selectedBranch, fetchBranchDeleteImpact])
+
+  /** 削除完了後に集計を再取得 */
+  const handleBranchDeleted = useCallback(() => {
+    loadStats()
+  }, [loadStats])
+
   return (
     <div className="space-y-6">
       {/* フィルタ */}
@@ -108,6 +131,10 @@ export function StatsTab({ projects }: StatsTabProps) {
         onYearChange={setStatsYear}
         isLoadingStats={isLoadingStats}
         onRefresh={loadStats}
+        onBranchDeleted={handleBranchDeleted}
+        branchDeleteImpact={branchDeleteImpact}
+        isLoadingBranchDeleteImpact={isLoadingBranchDeleteImpact}
+        onRequestBranchDeleteImpact={handleRequestBranchDeleteImpact}
       />
 
       {/* プロジェクト・ブランチ選択案内 */}

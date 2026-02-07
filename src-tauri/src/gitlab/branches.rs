@@ -3,7 +3,7 @@
 //! ブランチ一覧の取得。
 
 use crate::error::AppResult;
-use crate::gitlab::{GitLabClient, GitLabBranch};
+use crate::gitlab::{GitLabBranch, GitLabClient};
 
 impl GitLabClient {
     /// プロジェクトのブランチ一覧を取得

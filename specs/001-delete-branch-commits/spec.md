@@ -5,6 +5,17 @@
 **Status**: Draft  
 **Input**: User description: "ユーザーとして、収集したコミットをブランチ単位で削除したい。なぜなら、間違って収集してしまったブランチを集計表示したくないから。"
 
+## Clarifications
+
+### Session 2026-02-07
+
+- Q: 削除方式はどれですか？ → A: 物理削除（完全削除・復元不可）
+- Q: 誰が削除を実行できますか？ → A: 権限制御なし（全ユーザーが削除可）
+- Q: 収集中の同一ブランチ削除はどう扱いますか？ → A: 収集中は削除不可（明確なブロック）
+- Q: 削除時の確認方法はどれですか？ → A: 「取り消し不可」明記の確認ダイアログ
+- Q: 削除後に影響を受けるエクスポート形式は？ → A: エクスポート機能は存在しない
+- Q: 削除ボタンのアイコンは？ → A: ゴミ箱アイコン
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Remove miscollected branch data (Priority: P1)
@@ -47,10 +58,15 @@ As a user, I want to see how many commits and which summaries will be affected b
 - **FR-001**: System MUST allow users to select a project context and a branch for deletion.
 - **FR-002**: System MUST show a pre-confirmation impact summary including the number of commits to be removed and which aggregate views will change.
 - **FR-003**: System MUST require explicit confirmation before deleting collected commits for a branch.
+- **FR-003a**: System MUST show a confirmation dialog that explicitly states the deletion is irreversible.
 - **FR-004**: System MUST remove deleted branch commits from all aggregate views and exports.
+- **FR-004**: System MUST remove deleted branch commits from all aggregate views.
 - **FR-005**: System MUST keep all non-selected branches unchanged.
 - **FR-006**: System MUST show a non-destructive message when the selected branch has no collected commits.
 - **FR-007**: System MUST block deletion when a collection run is active for the same project and branch, and explain the reason.
+- **FR-008**: System MUST perform irreversible physical deletion for the selected branch commits.
+- **FR-009**: System MUST allow any user to perform branch commit deletion (no role-based restriction).
+- **FR-010**: System MUST display the delete action with a trash icon.
 
 ### Key Entities _(include if feature involves data)_
 
@@ -73,6 +89,7 @@ As a user, I want to see how many commits and which summaries will be affected b
 - Deletion affects only locally collected data and does not modify remote repositories.
 - Deletion scope is limited to the currently selected project and branch.
 - If the user recollects the same branch later, its commits can reappear in aggregates.
+- No export feature exists for this product.
 
 ## Dependencies
 

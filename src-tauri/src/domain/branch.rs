@@ -11,10 +11,10 @@ pub struct Branch {
     /// プロジェクト ID
     #[serde(rename = "projectId", alias = "project_id")]
     pub project_id: i64,
-    
+
     /// ブランチ名
     pub name: String,
-    
+
     /// デフォルトブランチかどうか
     #[serde(default, rename = "isDefault", alias = "is_default")]
     pub is_default: bool,
@@ -41,9 +41,9 @@ mod tests {
             name: "main".to_string(),
             default: true,
         };
-        
+
         let branch = Branch::from_gitlab(123, gitlab_branch);
-        
+
         assert_eq!(branch.project_id, 123);
         assert_eq!(branch.name, "main");
         assert!(branch.is_default);

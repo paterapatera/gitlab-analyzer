@@ -11,14 +11,14 @@ pub struct Project {
     /// GitLab プロジェクト ID
     #[serde(rename = "projectId", alias = "project_id")]
     pub project_id: i64,
-    
+
     /// プロジェクト名
     pub name: String,
-    
+
     /// 名前空間付きパス（例: group/project）
     #[serde(rename = "pathWithNamespace", alias = "path_with_namespace")]
     pub path_with_namespace: String,
-    
+
     /// Web UI の URL
     #[serde(rename = "webUrl", alias = "web_url")]
     pub web_url: String,
@@ -47,9 +47,9 @@ mod tests {
             path_with_namespace: "group/my-project".to_string(),
             web_url: "https://gitlab.example.com/group/my-project".to_string(),
         };
-        
+
         let project = Project::from(gitlab_project);
-        
+
         assert_eq!(project.project_id, 123);
         assert_eq!(project.name, "my-project");
         assert_eq!(project.path_with_namespace, "group/my-project");

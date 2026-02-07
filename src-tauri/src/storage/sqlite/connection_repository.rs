@@ -1,7 +1,6 @@
 /// GitLab 接続設定の SQLite リポジトリ
 ///
 /// 接続設定（base_url、author_email、access_token）を SQLite に保存します。
-
 use anyhow::{Context, Result};
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
@@ -29,24 +28,25 @@ impl ConnectionRepository {
         // 既存レコードを削除（1レコードのみ）
         conn.execute("DELETE FROM connections", [])
             .context("Failed to delete existing connection")?;
-        
+
         // 新しい接続情報を挿入
         conn.execute(
             "INSERT INTO connections (base_url, author_email, access_token, updated_at_utc)
              VALUES (?, ?, ?, ?)",
             rusqlite::params![&base_url, author_email, access_token, updated_at],
-        ).context("Failed to insert connection record")?;
-        
+        )
+        .context("Failed to insert connection record")?;
+
         tracing::info!("GitLab connection settings saved");
         Ok(())
     }
-    
+
     /// 接続設定をデータベースから取得
     pub fn get_connection(conn: &Connection) -> Result<Option<(String, Option<String>, String)>> {
-        let mut stmt = conn.prepare(
-            "SELECT base_url, author_email, access_token FROM connections LIMIT 1"
-        ).context("Failed to prepare connection query")?;
-        
+        let mut stmt = conn
+            .prepare("SELECT base_url, author_email, access_token FROM connections LIMIT 1")
+            .context("Failed to prepare connection query")?;
+
         let result = stmt.query_row([], |row| {
             Ok((
                 row.get::<_, String>(0)?,
@@ -54,7 +54,7 @@ impl ConnectionRepository {
                 row.get::<_, String>(2)?,
             ))
         });
-        
+
         match result {
             Ok(values) => {
                 tracing::debug!("Retrieved GitLab connection settings");
@@ -67,13 +67,13 @@ impl ConnectionRepository {
             Err(e) => Err(anyhow::anyhow!("Failed to query connection: {}", e)),
         }
     }
-    
+
     /// 接続設定を削除
     pub fn delete_connection(conn: &Connection) -> Result<()> {
         // データベースから接続情報を削除
         conn.execute("DELETE FROM connections", [])
             .context("Failed to delete connection record")?;
-        
+
         tracing::info!("GitLab connection settings deleted");
         Ok(())
     }
@@ -88,7 +88,7 @@ mod tests {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("test.db");
         let conn = rusqlite::Connection::open(&db_path).unwrap();
-        
+
         // テーブル作成
         conn.execute(
             "CREATE TABLE connections (
@@ -99,39 +99,41 @@ mod tests {
                 updated_at_utc TEXT NOT NULL
             )",
             [],
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         conn
     }
 
     #[test]
     fn test_set_connection() {
         let conn = create_test_connection();
-        
+
         let result = ConnectionRepository::set_connection(
             &conn,
             "https://gitlab.example.com".to_string(),
             Some("user@example.com".to_string()),
             "test_token_123".to_string(),
         );
-        
+
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_get_connection() {
         let conn = create_test_connection();
-        
+
         ConnectionRepository::set_connection(
             &conn,
             "https://gitlab.example.com".to_string(),
             Some("user@example.com".to_string()),
             "test_token_123".to_string(),
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         let result = ConnectionRepository::get_connection(&conn).unwrap();
         assert!(result.is_some());
-        
+
         let (base_url, author_email, access_token) = result.unwrap();
         assert_eq!(base_url, "https://gitlab.example.com");
         assert_eq!(author_email, Some("user@example.com".to_string()));
