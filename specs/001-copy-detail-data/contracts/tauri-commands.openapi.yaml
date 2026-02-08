@@ -1,0 +1,9 @@
+openapi: 3.0.3
+info:
+  title: gitlab-analyzer (Tauri Commands)
+  version: 0.1.0
+  description: |
+    詳細データのコピー機能はフロントエンドのみで完結し、
+    新規のTauriコマンドやAPI境界を追加しない。
+
+paths: {}

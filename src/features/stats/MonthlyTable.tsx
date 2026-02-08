@@ -6,6 +6,7 @@
 
 import type { MonthlyStatsResponse } from '@/lib/contracts/tauriCommands'
 import { cn } from '@/lib/utils'
+import { buildMonthlyTableHeaders } from '@/features/stats/buildMonthlyTableTsv'
 import {
   Table,
   TableBody,
@@ -35,18 +36,21 @@ export function MonthlyTable({ data, className }: MonthlyTableProps) {
     )
   }
 
+  const headers = buildMonthlyTableHeaders(data)
+
   return (
     <div className={className}>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>ユーザー</TableHead>
-            {data.months.map((month) => (
-              <TableHead key={month} className="text-right">
-                {month}月
+            {headers.map((label, index) => (
+              <TableHead
+                key={`${label}-${index}`}
+                className={index === 0 ? undefined : 'text-right'}
+              >
+                {label}
               </TableHead>
             ))}
-            <TableHead className="text-right">合計</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -17,7 +17,11 @@ import { useStatsData, type StatsView } from '@/features/stats/useStatsData'
 import { useBranchDeleteImpact } from '@/features/stats/useBranchDeleteImpact'
 import { StatsFilterCard } from '@/features/stats/StatsFilterCard'
 import { SelectionAlerts } from '@/features/stats/SelectionAlerts'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { buildMonthlyTableTsv } from '@/features/stats/buildMonthlyTableTsv'
+import { Copy } from 'lucide-react'
 
 /** StatsTab のプロパティ */
 export interface StatsTabProps {
@@ -33,6 +37,10 @@ export function StatsTab({ projects }: StatsTabProps) {
   const [statsView, setStatsView] = useState<StatsView>('project')
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [statsYear, setStatsYear] = useState(new Date().getFullYear())
+  const [copySuccess, setCopySuccess] = useState<{
+    at: number
+    headerOnly: boolean
+  } | null>(null)
 
   // ブランチ管理
   const { branches, selectedBranch, setSelectedBranch } = useBranches({
@@ -88,6 +96,18 @@ export function StatsTab({ projects }: StatsTabProps) {
     loadStats()
   }, [loadStats])
 
+  useEffect(() => {
+    if (copySuccess === null) {
+      return
+    }
+
+    const timer = window.setTimeout(() => {
+      setCopySuccess(null)
+    }, 2000)
+
+    return () => window.clearTimeout(timer)
+  }, [copySuccess])
+
   // プロジェクト変更ハンドラ
   const handleProjectSelect = useCallback((project: Project) => {
     setSelectedProject(project)
@@ -114,6 +134,21 @@ export function StatsTab({ projects }: StatsTabProps) {
   const handleBranchDeleted = useCallback(() => {
     loadStats()
   }, [loadStats])
+
+  const handleCopyMonthlyTable = useCallback(async () => {
+    if (!filteredStatsData) {
+      return
+    }
+
+    try {
+      const tsv = buildMonthlyTableTsv(filteredStatsData)
+      await navigator.clipboard.writeText(tsv)
+      const isHeaderOnly = filteredStatsData.series.length === 0
+      setCopySuccess({ at: Date.now(), headerOnly: isHeaderOnly })
+    } catch (error) {
+      console.error('Failed to copy monthly table TSV.', error)
+    }
+  }, [filteredStatsData])
 
   return (
     <div className="space-y-6">
@@ -177,8 +212,29 @@ export function StatsTab({ projects }: StatsTabProps) {
 
             {/* 表 */}
             <Card>
-              <CardHeader>
+              <CardHeader className="grid-rows-[auto_auto_auto]">
+                {copySuccess !== null && (
+                  <Alert>
+                    <AlertTitle>コピー完了</AlertTitle>
+                    <AlertDescription>
+                      {copySuccess.headerOnly
+                        ? 'ヘッダーのみコピーしました。'
+                        : '詳細データをクリップボードにコピーしました。'}
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <CardTitle>詳細データ</CardTitle>
+                <CardAction>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="詳細データをコピー"
+                    title="詳細データをコピー"
+                    onClick={handleCopyMonthlyTable}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </CardAction>
               </CardHeader>
               <CardContent>
                 <MonthlyTable data={filteredStatsData!} />
