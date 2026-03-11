@@ -11,6 +11,7 @@ import type {
   BulkCollectionProgress,
   BulkCollectionStarted,
   BulkCollectionStatus,
+  Project,
 } from '@/lib/contracts/tauriCommands'
 import { ErrorAlert } from '@/features/ui/ErrorAlert'
 import { Button } from '@/components/ui/button'
@@ -30,9 +31,28 @@ export function BulkCollectCard() {
   const [runId, setRunId] = useState<string | null>(null)
   const [status, setStatus] = useState<BulkCollectionStatus | null>(null)
   const [progress, setProgress] = useState<BulkCollectionProgress | null>(null)
+  const [projectNameById, setProjectNameById] = useState<Record<number, string>>({})
   const [isRunning, setIsRunning] = useState(false)
   const [isLoadingStatus, setIsLoadingStatus] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      const result = await invokeCommand<Project[]>('get_projects')
+      if (!result.ok || !Array.isArray(result.data)) {
+        return
+      }
+
+      const map = result.data.reduce<Record<number, string>>((acc, project) => {
+        acc[project.projectId] = project.name
+        return acc
+      }, {})
+
+      setProjectNameById(map)
+    }
+
+    loadProjects()
+  }, [])
 
   const refreshStatus = useCallback(
     async (targetRunId?: string) => {
@@ -161,6 +181,10 @@ export function BulkCollectCard() {
   }, [status])
 
   const hasFailedTargets = (status?.failedCount ?? 0) > 0
+  const getProjectLabel = useCallback(
+    (projectId: number) => projectNameById[projectId] ?? String(projectId),
+    [projectNameById],
+  )
 
   return (
     <Card>
@@ -203,7 +227,8 @@ export function BulkCollectCard() {
           </div>
           {progress?.currentTarget && (
             <div className="text-xs text-muted-foreground">
-              処理中: {progress.currentTarget.projectId} / {progress.currentTarget.branchName}
+              処理中: {getProjectLabel(progress.currentTarget.projectId)} /{' '}
+              {progress.currentTarget.branchName}
             </div>
           )}
         </div>
@@ -221,7 +246,7 @@ export function BulkCollectCard() {
             <TableBody>
               {status.results.map((result) => (
                 <TableRow key={`${result.projectId}-${result.branchName}`}>
-                  <TableCell>{result.projectId}</TableCell>
+                  <TableCell>{getProjectLabel(result.projectId)}</TableCell>
                   <TableCell>{result.branchName}</TableCell>
                   <TableCell>
                     <Badge variant={result.status === 'failed' ? 'destructive' : 'outline'}>
